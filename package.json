@@ -5,7 +5,9 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "start": "sirv public --no-clear"
+    "start": "sirv public --no-clear",
+    "test": "mocha --exit -r app.js --check-leaks --recursive -R dot test",
+    "test:watch": "nodemon -e js,json,yaml --exec bash -c 'time npm test; date' ."
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.0.0",
@@ -18,6 +20,9 @@
     "svelte": "^3.0.0"
   },
   "dependencies": {
+    "chai": "^4.3.4",
+    "express": "^4.17.1",
+    "mocha": "^9.1.1",
     "sirv-cli": "^1.0.0"
   }
 }
