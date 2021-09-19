@@ -112,7 +112,7 @@ describe('LedString', function() {
       ]);
     });
 
-    context.skip('when more than one stop is provided', function() {
+    context('when more than one stop is provided', function() {
       beforeEach(async function() {
         options = {
           width: 1,
@@ -136,6 +136,38 @@ describe('LedString', function() {
           [0,0,0],
           [0,0,0],
         ]);
+      });
+    });
+
+    context('when a stop is provided for each pixel in the Y', function() {
+      beforeEach(async function() {
+        options = {
+          width: 1,
+          height: 2,
+        };
+
+        inst = new LedString(options);
+      });
+
+      it('should use those stops as the pixel values', async function() {
+        inst.setGradient([255,0,0],[0,0,0],[0,0,0]);
+
+        const actual = inst.pixels.map((p) => {
+          return p.color;
+        })
+
+        expect(actual).to.deep.equal([
+          [255,0,0],
+          [0,0,0],
+        ]);
+      });
+    });
+
+    context('when more stops are provided than there are pixels', function() {
+      it('should throw', async function() {
+        expect(function() {
+          inst.setGradient([255,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]);
+        }).to.throw('Cannot fit 4 deltas into 3 pixels');
       });
     });
   });

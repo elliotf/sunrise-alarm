@@ -6,7 +6,7 @@
     height: 10,
   });
 
-  string.setGradient([255,0,0],[0,0,0])
+  string.setGradient([255,0,0],[0,0,0],[0,0,0])
 
   let rows = string.toRowsAndColumns();
 

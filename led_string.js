@@ -47,20 +47,39 @@ class LedString {
     return rows;
   }
 
-  setGradient(from,to) {
-    // TODO: gamma correction
-    const channels = [0,1,2];
-    const delta = channels.map((ch) => {
-      return to[ch] - from[ch];
-    });
-    this.pixels.forEach((p) => {
-      const pct_up = (p.y) / (this.height-1);
+  // TODO: gamma correction
+  setGradient(...stops) {
+    if ((stops.length-1) > this.height) {
+      throw new Error(`Cannot fit ${stops.length-1} deltas into ${this.height} pixels`);
+    }
 
-      channels.forEach((ch) => {
-        p.color[ch] = Math.floor(from[ch] + delta[ch]*pct_up);
+    const channels = [0,1,2]; // R G B indexes into color array
+    const p_per_stop = Math.ceil(this.height/(stops.length-1));
+
+    let start = 0;
+    let stop = p_per_stop;
+    for (let i = 0; i < stops.length - 1; ++i) {
+      const from = stops[i];
+      const to = stops[i+1];
+      const delta = channels.map((ch) => {
+        return to[ch] - from[ch];
       });
 
-    })
+      let y;
+      for (y = start; y < stop && y < this.height; ++y) {
+        const pct_up = (y-start) / Math.max(p_per_stop-1,1);
+
+        for (let x = 0; x < this.width; ++x) {
+          const offset = this.getOffsetForCoord({x,y})
+          channels.forEach((ch) => {
+            this.pixels[offset].color[ch] = Math.floor(from[ch] + delta[ch]*pct_up);
+          });
+        }
+      }
+
+      start = y;
+      stop = y + p_per_stop;
+    }
   }
 }
 
