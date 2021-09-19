@@ -28,9 +28,9 @@ describe('LedString', function() {
         { x: 0, y: 0, offset: 0 },
         { x: 0, y: 1, offset: 1 },
         { x: 0, y: 2, offset: 2 },
-        { x: 1, y: 0, offset: 3 },
+        { x: 1, y: 2, offset: 3 },
         { x: 1, y: 1, offset: 4 },
-        { x: 1, y: 2, offset: 5 },
+        { x: 1, y: 0, offset: 5 },
       ];
 
       const actual = expected.map(function({x,y}) {
@@ -57,9 +57,9 @@ describe('LedString', function() {
         { x: 0, y: 0, offset: 0 },
         { x: 0, y: 1, offset: 1 },
         { x: 0, y: 2, offset: 2 },
-        { x: 1, y: 0, offset: 3 },
+        { x: 1, y: 2, offset: 3 },
         { x: 1, y: 1, offset: 4 },
-        { x: 1, y: 2, offset: 5 },
+        { x: 1, y: 0, offset: 5 },
       ];
 
       const actual = expected.map(function({offset}) {
@@ -80,7 +80,7 @@ describe('LedString', function() {
       expect(inst.toRowsAndColumns()).to.deep.equal([
         [
           {x: 0, y: 2, offset: 2, color: [0,0,0]},
-          {x: 1, y: 2, offset: 5, color: [0,0,0]},
+          {x: 1, y: 2, offset: 3, color: [0,0,0]},
         ],
         [
           {x: 0, y: 1, offset: 1, color: [0,0,0]},
@@ -88,27 +88,33 @@ describe('LedString', function() {
         ],
         [
           {x: 0, y: 0, offset: 0, color: [0,0,0]},
-          {x: 1, y: 0, offset: 3, color: [0,0,0]},
+          {x: 1, y: 0, offset: 5, color: [0,0,0]},
         ],
       ]);
     });
   });
 
   describe('#setGradient', function() {
+    let getPixelColors;
+
+    beforeEach(async function() {
+      getPixelColors = function() {
+        return inst.pixels.map((p) => {
+          return p.color;
+        })
+      }
+    });
+
     it('should apply a gradient to the pixels', async function() {
-      inst.setGradient([255,0,0],[0,0,0]);
+      inst.setGradient([0,255,0,0],[1,0,0,0]);
 
-      const actual = inst.pixels.map((p) => {
-        return p.color;
-      })
-
-      expect(actual).to.deep.equal([
+      expect(getPixelColors()).to.deep.equal([
         [255,0,0],
         [127,0,0],
         [0,0,0],
-        [255,0,0],
-        [127,0,0],
         [0,0,0],
+        [127,0,0],
+        [255,0,0],
       ]);
     });
 
@@ -123,18 +129,14 @@ describe('LedString', function() {
       });
 
       it('should interpolate correctly', async function() {
-        inst.setGradient([255,0,0],[0,0,0],[0,0,0]);
+        inst.setGradient([0,255,0,0],[0.5,1,0,0],[1,3,0,0]);
 
-        const actual = inst.pixels.map((p) => {
-          return p.color;
-        })
-
-        expect(actual).to.deep.equal([
+        expect(getPixelColors()).to.deep.equal([
           [255,0,0],
-          [127,0,0],
-          [0,0,0],
-          [0,0,0],
-          [0,0,0],
+          [128,0,0],
+          [1,0,0],
+          [2,0,0],
+          [3,0,0],
         ]);
       });
     });
@@ -150,7 +152,7 @@ describe('LedString', function() {
       });
 
       it('should use those stops as the pixel values', async function() {
-        inst.setGradient([255,0,0],[0,0,0],[0,0,0]);
+        inst.setGradient([0,255,0,0],[0.5,0,0,0],[1,0,0,0]);
 
         const actual = inst.pixels.map((p) => {
           return p.color;
@@ -166,7 +168,7 @@ describe('LedString', function() {
     context('when more stops are provided than there are pixels', function() {
       it('should throw', async function() {
         expect(function() {
-          inst.setGradient([255,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]);
+          inst.setGradient([0,255,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]);
         }).to.throw('Cannot fit 4 deltas into 3 pixels');
       });
     });

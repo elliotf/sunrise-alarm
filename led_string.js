@@ -16,12 +16,15 @@ class LedString {
   }
 
   getOffsetForCoord({x,y}) {
-    return y+(x*this.height);
+    const y_part = (x % 2) ? (this.height - y - 1) : y;
+    return y_part + x*this.height;
   }
 
   getCoordForOffset(i) {
-    const y = i % this.height;
     const x = Math.floor(i/this.height);
+
+    const y_mod = i % this.height;
+    const y = (x % 2) ? (this.height - y_mod - 1): y_mod
 
     return {
       x,
@@ -54,20 +57,19 @@ class LedString {
     }
 
     const channels = [0,1,2]; // R G B indexes into color array
-    const p_per_stop = Math.ceil(this.height/(stops.length-1));
 
-    let start = 0;
-    let stop = p_per_stop;
     for (let i = 0; i < stops.length - 1; ++i) {
-      const from = stops[i];
-      const to = stops[i+1];
+      const [from_pct, ...from] = stops[i];
+      const [to_pct, ...to] = stops[i+1];
       const delta = channels.map((ch) => {
         return to[ch] - from[ch];
       });
 
-      let y;
-      for (y = start; y < stop && y < this.height; ++y) {
-        const pct_up = (y-start) / Math.max(p_per_stop-1,1);
+      const start = Math.floor(from_pct*this.height);
+      const stop = Math.ceil(to_pct*this.height);
+
+      for (let y = start; y < stop && y < this.height; ++y) {
+        const pct_up = (y-start) / Math.max(stop-start-1,1);
 
         for (let x = 0; x < this.width; ++x) {
           const offset = this.getOffsetForCoord({x,y})
@@ -76,9 +78,6 @@ class LedString {
           });
         }
       }
-
-      start = y;
-      stop = y + p_per_stop;
     }
   }
 }
