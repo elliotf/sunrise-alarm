@@ -62,37 +62,6 @@ class LedString {
     return rows;
   }
 
-  // TODO: gamma correction: `255 * Math.pow(( val / 255), gammacorrection_factor);`
-  setGradient(...stops) {
-    if ((stops.length-1) > this.height) {
-      throw new Error(`Cannot fit ${stops.length-1} deltas into ${this.height} pixels`);
-    }
-
-    const channels = [0,1,2]; // R G B indexes into color array
-
-    for (let i = 0; i < stops.length - 1; ++i) {
-      const [from_pct, ...from] = stops[i];
-      const [to_pct, ...to] = stops[i+1];
-      const delta = channels.map((ch) => {
-        return to[ch] - from[ch];
-      });
-
-      const start = Math.floor(from_pct*this.height);
-      const stop = Math.ceil(to_pct*this.height);
-
-      for (let y = start; y < stop && y < this.height; ++y) {
-        const pct_up = (y-start) / Math.max(stop-start-1,1);
-
-        for (let x = 0; x < this.width; ++x) {
-          const pixel = this.getPixelAtCoord({x,y});
-          channels.forEach((ch) => {
-            pixel.color[ch] = Math.round(from[ch] + delta[ch]*pct_up);
-          });
-        }
-      }
-    }
-  }
-
   displayForTest() {
     return this.pixels.map((p) => {
       return p.color.map((c) => {
