@@ -16,6 +16,26 @@ describe('LedString', function() {
     inst = new LedString(options);
   });
 
+  describe('constructor', function() {
+    context('when provided no options', function() {
+      it('should return a string with defaults', async function() {
+        const inst = new LedString();
+
+        expect(inst.width).to.equal(5);
+        expect(inst.height).to.equal(8);
+      });
+    });
+
+    context('when provided empty options', function() {
+      it('should return a string with defaults', async function() {
+        const inst = new LedString({});
+
+        expect(inst.width).to.equal(5);
+        expect(inst.height).to.equal(8);
+      });
+    });
+  });
+
   describe('#getOffsetForCoord', function() {
     let inst;
 

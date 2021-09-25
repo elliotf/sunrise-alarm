@@ -1,5 +1,10 @@
 class LedString {
-  constructor({width,height}) {
+  constructor(opts) {
+    const {
+      width=5,
+      height=8,
+    } = opts || {};
+
     this.width = width;
     this.height = height;
     this.pixels = Array
