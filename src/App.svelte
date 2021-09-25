@@ -1,12 +1,29 @@
 <script>
   import LedString from '../led_string';
 
+  //const num_pixels = 160; // 5M @ 32 pixels/M
+  const num_pixels = 40; // for testing
+  const width = 5;
+  const height = Math.floor(num_pixels/width);
+
   const string = new LedString({
-    width: 8,
-    height: 10,
+    width,
+    height,
   });
 
-  string.setGradient([255,0,0],[0,0,0],[0,0,0])
+  string.setGradient(
+    [0,255,0,0],
+    [0.75,0,0,0],
+    [1,0,0,0]
+  )
+
+  /*
+  string.setGradient(
+    [0,255,64,64],
+    [0.75,0,0,0],
+    [1,0,0,0]
+  )
+  */
 
   let rows = string.toRowsAndColumns();
 
@@ -17,6 +34,12 @@
 
     return '#' + str.join('');
   }
+
+  function labelForPixel({ x, y, offset }) {
+    return '';
+    return `${offset}:${x},${y}`;
+    return `${offset}`;
+  }
 </script>
 
 <main>
@@ -24,7 +47,7 @@
     {#each rows as pixels}
       <div class="row">
       {#each pixels as p}
-        <div class="pixel" style="background-color: {cssColor(p.color)}">{p.offset}:{p.x},{p.y}&nbsp;</div>
+        <div class="pixel" style="background-color: {cssColor(p.color)}">{labelForPixel(p)}</div>
       {/each}
       </div>
     {/each}
@@ -53,6 +76,7 @@
     /* padding: 1px; */
     border: 0px;
     /* background-color: red; */
+    font-size: 9px;
   }
 
 	main {
