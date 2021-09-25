@@ -142,4 +142,42 @@ describe('Alarm', function() {
       });
     });
   });
+
+  describe('#updateOffset', function() {
+    it('should fill the alarms LEDs with a gradient', async function() {
+      this.sinon.spy(inst.leds, 'fill');
+
+      inst.updateOffset(-1);
+      inst.updateOffset(-0.99);
+      inst.updateOffset(0);
+      inst.updateOffset(1);
+
+      expect(inst.leds.fill.args).to.deep.equal([
+        [[[0,0,0],[0,0,0],[0,0,0]],[[255,0,0],[127,0,0],[0,0,0]],0],
+        [[[0,0,0],[0,0,0],[0,0,0]],[[255,0,0],[127,0,0],[0,0,0]],0.02],
+        [[[255,128,0],[255,64,0],[255,0,0]],[[255,255,255],[255,255,255],[255,255,255]],1],
+        [[[255,255,255],[255,255,255],[255,255,255]],[[0,0,0],[0,0,0],[0,0,0]],1],
+      ]);
+    });
+  });
+
+  describe('#updateNow', function() {
+    let now;
+
+    beforeEach(async function() {
+      now = new Date('2006-01-02T00:00:00');
+    });
+
+    it('should delegate to #determineOffset and #updateOffset', async function() {
+      this.sinon.spy(inst, 'updateOffset');
+
+      inst.updateNow(new Date('2006-01-02T00:00:00'));
+      inst.updateNow(new Date('2006-01-02T06:00:00'));
+
+      expect(inst.updateOffset.args).to.deep.equal([
+        [-18],
+        [0],
+      ]);
+    });
+  });
 });

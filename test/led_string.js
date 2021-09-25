@@ -115,26 +115,17 @@ describe('LedString', function() {
   });
 
   describe('#setGradient', function() {
-    let getPixelColors;
-
-    beforeEach(async function() {
-      getPixelColors = function() {
-        return inst.pixels.map((p) => {
-          return p.color;
-        })
-      }
-    });
 
     it('should apply a gradient to the pixels', async function() {
       inst.setGradient([0,255,0,0],[1,0,0,0]);
 
-      expect(getPixelColors()).to.deep.equal([
-        [255,0,0],
-        [127,0,0],
-        [0,0,0],
-        [0,0,0],
-        [127,0,0],
-        [255,0,0],
+      expect(inst.displayForTest()).to.deep.equal([
+        '255 0   0  ',
+        '128 0   0  ',
+        '0   0   0  ',
+        '0   0   0  ',
+        '128 0   0  ',
+        '255 0   0  ',
       ]);
     });
 
@@ -151,12 +142,12 @@ describe('LedString', function() {
       it('should interpolate correctly', async function() {
         inst.setGradient([0,255,0,0],[0.5,1,0,0],[1,3,0,0]);
 
-        expect(getPixelColors()).to.deep.equal([
-          [255,0,0],
-          [128,0,0],
-          [1,0,0],
-          [2,0,0],
-          [3,0,0],
+        expect(inst.displayForTest()).to.deep.equal([
+          '255 0   0  ',
+          '128 0   0  ',
+          '1   0   0  ',
+          '2   0   0  ',
+          '3   0   0  ',
         ]);
       });
     });
@@ -191,6 +182,72 @@ describe('LedString', function() {
           inst.setGradient([0,255,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]);
         }).to.throw('Cannot fit 4 deltas into 3 pixels');
       });
+    });
+  });
+
+  describe('.interpolate', function() {
+    it('should return a number some proportion between two numbers', async function() {
+      const expected = [
+        {
+          input: [0,255,0.5],
+          output: 128,
+        },
+        {
+          input: [0,255,0.1],
+          output: 26,
+        },
+        {
+          input: [0,12,0.1],
+          output: 1,
+        },
+        {
+          input: [0,15,0.1],
+          output: 2,
+        },
+      ];
+
+      const actual = expected.map(({ input }) => {
+        return {
+          input,
+          output: LedString.interpolate.apply(null, input),
+        };
+      });
+
+      expect(actual).to.deep.equal(expected);
+    });
+  });
+
+  describe('#fill', function() {
+    let from;
+    let to;
+
+    beforeEach(async function() {
+      from = [[0,0,255],[0,0,128],[0,0,64]];
+      to = [[255,255,0],[128,128,0],[64,64,0]];
+    });
+
+    it('should fill the LEDs with an interpolation of two gradients', async function() {
+      inst.fill(from,to,0.5);
+
+      expect(inst.displayForTest()).to.deep.equal([
+        "128 128 128",
+        "64  64  64 ",
+        "32  32  32 ",
+        "32  32  32 ",
+        "64  64  64 ",
+        "128 128 128",
+      ]);
+
+      inst.fill(from,to,0.1);
+
+      expect(inst.displayForTest()).to.deep.equal([
+        "26  26  230",
+        "13  13  115",
+        "6   6   58 ",
+        "6   6   58 ",
+        "13  13  115",
+        "26  26  230",
+      ]);
     });
   });
 });

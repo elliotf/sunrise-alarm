@@ -86,9 +86,38 @@ class LedString {
         for (let x = 0; x < this.width; ++x) {
           const pixel = this.getPixelAtCoord({x,y});
           channels.forEach((ch) => {
-            pixel.color[ch] = Math.floor(from[ch] + delta[ch]*pct_up);
+            pixel.color[ch] = Math.round(from[ch] + delta[ch]*pct_up);
           });
         }
+      }
+    }
+  }
+
+  displayForTest() {
+    return this.pixels.map((p) => {
+      return p.color.map((c) => {
+        return c.toString().padEnd(3, ' ');
+      }).join(' ');
+    })
+  }
+
+  static interpolate(from, to, pct) {
+    return Math.round(from + (to - from)*pct);
+  }
+
+  fill(from, to, pct) {
+    const channels = [0,1,2]; // R G B indexes into color array
+
+    for (let y = 0; y < this.height && y < this.height; ++y) {
+      const delta = channels.map((ch) => {
+        return to[y][ch] - from[y][ch];
+      });
+
+      for (let x = 0; x < this.width; ++x) {
+        const pixel = this.getPixelAtCoord({x,y});
+        channels.forEach((ch) => {
+          pixel.color[ch] = Math.round(from[y][ch] + delta[ch]*pct);
+        });
       }
     }
   }

@@ -1,3 +1,5 @@
+const util = require('./util');
+
 class Gradient {
 }
 
@@ -35,6 +37,14 @@ const gradient_schedule = [
       [1,255,255,255],
     ],
   },
+  // for a while
+  {
+    index: 0.8,
+    formula: [
+      [0,255,255,255],
+      [1,255,255,255],
+    ],
+  },
   // fade to black
   {
     index: 1,
@@ -64,6 +74,7 @@ class KeyFrames {
     this.off = {
       from: this.gradientFrom([[0,0,0,0],[1,0,0,0]]),
       to: this.gradientFrom([[0,0,0,0],[1,0,0,0]]),
+      pct: 0,
     };
   }
 
@@ -78,8 +89,14 @@ class KeyFrames {
       const from = this.gradient_schedule[i];
       const to = this.gradient_schedule[i+1];
 
+      // percentage between the two indices
+      const dist = (to.index - from.index);
+      const gone = (offset - from.index);
+      const pct = util.round(gone / dist, 3);
+
       if (offset >= from.index && offset <= to.index) {
         return {
+          pct,
           from: from.gradient,
           to: to.gradient,
         }
