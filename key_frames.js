@@ -67,23 +67,18 @@ class KeyFrames {
     };
   }
 
-  at(t) {
-    const output = {
-      from: null,
-      to: null,
-    };
-
+  at(offset) {
     const last = this.gradient_schedule.length - 1;
-    if (t < this.gradient_schedule[0].index || t > this.gradient_schedule[last].index) {
+    if (offset < this.gradient_schedule[0].index || offset > this.gradient_schedule[last].index) {
       return this.off;
     }
 
-    // find two gradients that t_index fits between
-    for(let i = 0; i <= this.gradient_schedule.length -2; ++i) {
+    // find two gradients that offset fits between
+    for(let i = 0; i < this.gradient_schedule.length - 1; ++i) {
       const from = this.gradient_schedule[i];
       const to = this.gradient_schedule[i+1];
 
-      if (t >= from.index && t <= to.index) {
+      if (offset >= from.index && offset <= to.index) {
         return {
           from: from.gradient,
           to: to.gradient,
@@ -91,8 +86,7 @@ class KeyFrames {
       }
     }
 
-    // go through our gradient schedule, find the best beginning/ending key frames
-    return output;
+    throw new Error('Should not get here');
   }
 
   gradientFrom(stops) {

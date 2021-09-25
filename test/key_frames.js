@@ -25,6 +25,15 @@ describe('KeyFrames', function() {
       });
     });
 
+    context('when provided the central index', function() {
+      it('should err towards the earlier phase', async function() {
+        expect(inst.at(0)).to.deep.equal({
+          from: [[255,128,0],[255,64,0],[255,0,0]],
+          to: [[255,255,255],[255,255,255],[255,255,255]],
+        });
+      });
+    });
+
     context('when provided the last index', function() {
       it('should return the last phase', async function() {
         expect(inst.at(1)).to.deep.equal({
