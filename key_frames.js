@@ -1,8 +1,5 @@
 const util = require('./util');
 
-class Gradient {
-}
-
 const gradient_schedule = [
   // start black
   {
@@ -12,11 +9,22 @@ const gradient_schedule = [
       [1,0,0,0],
     ],
   },
+  /*
+  // purple/blue?
+  {
+    index: -0.9,
+    formula: [
+      [0,64,0,0],
+      [1,0,0,64],
+    ],
+  },
+  */
   // red slowly fading up from bottom
   {
     index: -0.5,
     formula: [
       [0,255,0,0],
+      //[1,0,0,64],
       [1,0,0,0],
     ],
   },
@@ -29,6 +37,16 @@ const gradient_schedule = [
       [1,255,0,0],
     ],
   },
+  /*
+  // full-ish yellow
+  {
+    index: -0.125,
+    formula: [
+      [0,255,255,0],
+      [1,255,128,0],
+    ],
+  },
+  */
   // full white
   {
     index: 0,
