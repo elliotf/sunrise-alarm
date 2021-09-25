@@ -6,7 +6,7 @@
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "start": "sirv public --no-clear",
-    "test": "mocha --exit -r app.js --check-leaks --recursive -R dot test",
+    "test": "NODE_CONFIG_ENV=test mocha --exit -r app.js --check-leaks --recursive -R dot test",
     "test:watch": "nodemon -e js,json,yaml --exec bash -c 'time npm test; date' ."
   },
   "devDependencies": {
