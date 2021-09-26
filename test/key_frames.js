@@ -46,11 +46,12 @@ describe('KeyFrames', function() {
       });
     });
 
-    it.skip('should return two gradients that surround that time (inclusive)', async function() {
+    it('should return two gradients that surround that time (inclusive)', async function() {
       const expected = [
         {
           input: -1,
           output: {
+            pct: 0,
             from: [[0,0,0],[0,0,0],[0,0,0]],
             to: [[255,0,0],[127,0,0],[0,0,0]],
           },
@@ -58,6 +59,7 @@ describe('KeyFrames', function() {
         {
           input: -0.99,
           output: {
+            pct: 0.02,
             from: [[0,0,0],[0,0,0],[0,0,0]],
             to: [[255,0,0],[127,0,0],[0,0,0]],
           },
@@ -65,13 +67,7 @@ describe('KeyFrames', function() {
         {
           input: 0.01,
           output: {
-            from: [[255,255,255],[255,255,255],[255,255,255]],
-            to: [[0,0,0],[0,0,0],[0,0,0]],
-          },
-        },
-        {
-          input: 0.99,
-          output: {
+            pct: 0.01,
             from: [[255,255,255],[255,255,255],[255,255,255]],
             to: [[0,0,0],[0,0,0],[0,0,0]],
           },
@@ -79,6 +75,7 @@ describe('KeyFrames', function() {
         {
           input: 1,
           output: {
+            pct: 1,
             from: [[255,255,255],[255,255,255],[255,255,255]],
             to: [[0,0,0],[0,0,0],[0,0,0]],
           },

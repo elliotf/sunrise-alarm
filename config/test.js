@@ -32,14 +32,6 @@ exports.gradient_schedule = [
       [1,255,255,255],
     ],
   },
-  // for a while
-  {
-    index: 0.8,
-    formula: [
-      [0,255,255,255],
-      [1,255,255,255],
-    ],
-  },
   // fade to black
   {
     index: 1,

@@ -1,17 +1,19 @@
 {
-  "name": "svelte-app",
-  "version": "1.0.0",
+  "name": "sunrise-alarm",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "rollup -c",
-    "dev": "rollup -c -w",
+    "build": "DISABLE_LOGGING=1 rollup -c",
+    "dev": "DISABLE_LOGGING=1 rollup -c -w",
     "start": "sirv public --no-clear",
-    "test": "NODE_CONFIG_ENV=test mocha --exit -r app.js --check-leaks --recursive -R dot test",
+    "test": "DISABLE_LOGGING=1 NODE_CONFIG_ENV=test mocha --exit -r app.js --check-leaks --recursive -R dot test",
     "test:watch": "nodemon -e js,json,yaml --exec bash -c 'time npm test; date' ."
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.0.0",
+    "@rollup/plugin-replace": "^3.0.0",
+    "nodemon": "^2.0.13",
     "rollup": "^2.3.4",
     "rollup-plugin-css-only": "^3.1.0",
     "rollup-plugin-livereload": "^2.0.0",
@@ -22,9 +24,10 @@
   },
   "dependencies": {
     "chai": "^4.3.4",
-    "config": "^3.3.6",
     "express": "^4.17.1",
     "mocha": "^9.1.1",
+    "pino": "^6.13.3",
+    "pino-pretty": "^7.0.1",
     "sirv-cli": "^1.0.0"
   }
 }

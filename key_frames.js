@@ -1,5 +1,5 @@
 const util = require('./util');
-const config = require('config');
+const config = require('./config');
 
 const gradient_schedule = config.gradient_schedule;
 

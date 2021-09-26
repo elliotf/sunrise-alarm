@@ -1,6 +1,7 @@
 import svelte from 'rollup-plugin-svelte';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
+import replace from '@rollup/plugin-replace';
 import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
@@ -28,6 +29,17 @@ function serve() {
 	};
 }
 
+const replacements = {};
+[
+  'NODE_ENV',
+  'NODE_CONFIG_ENV',
+  'DISABLE_LOGGING',
+].forEach((attr) => {
+  replacements[`process.env.${attr}`] = JSON.stringify(process.env[attr]);
+});
+
+replacements['__filename'] = JSON.stringify("");
+
 export default {
 	input: 'src/main.js',
 	output: {
@@ -37,6 +49,7 @@ export default {
 		file: 'public/build/bundle.js'
 	},
 	plugins: [
+		replace(replacements),
 		svelte({
 			compilerOptions: {
 				// enable run-time checks when not in production
