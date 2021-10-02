@@ -1,16 +1,13 @@
 # todo
 
 * todo
-  * update state on a schedule
-    * every N milliseconds/seconds
-      * `setInterval(() => { Alarm#updateNow(new Date); }, 1000);`
-      * which will get interpolated
   * hardware
     * find a ws2801 library or make one using https://github.com/fivdi/spi-device
       * akin to https://github.com/Jorgen-VikingGod/node-rpi-ws2801
     * test out LED strip to make sure it's not busted
-  * snooze/on/off button
-    * toggle between on/off, setting that state for N minutes
+  * dismiss/on/off button
+    * toggle between on/off
+    * setting that state for N minutes?
   * gamma correction
   * web UI
     * adjust schedule
@@ -23,6 +20,13 @@
     * expose via Oauth gateway?
   * assertions on animation/gradient config
     * avoid duplicate indices in schedule and gradients
+* eventually, maybe, but probably not
+  * snooze button
+  * swap out time generating/scheduling/gradient functions
+    * snooze = now() + delay
+  * separate display from alarm
+    * Tidier DI style
+    * easier to stub out WS2801/phy under test?
 * todone
   * gradient formula
   * be able to get keyframes for a given point in time
@@ -39,6 +43,10 @@
     * config/default vs config/test ?
   * Alarm#snooze (made it #dismiss instead of snooze)
     * make #updateNow() do nothing if new now < current now
+  * update state on a schedule
+    * every N milliseconds/seconds
+      * `setInterval(() => { Alarm#updateNow(new Date); }, 1000);`
+      * which will get interpolated
 * todistract
   * once the alarm is going off, flash the lights?
     * that sounds kind of unpleasant, but maybe a pulse?
