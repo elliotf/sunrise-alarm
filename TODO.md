@@ -1,8 +1,6 @@
 # todo
 
 * todo
-  * make LED schedule configuration rather than inside of code
-    * config/default vs config/test ?
   * update state on a schedule
     * every N milliseconds/seconds
       * `setInterval(() => { Alarm#updateNow(new Date); }, 1000);`
@@ -11,8 +9,6 @@
     * find a ws2801 library or make one using https://github.com/fivdi/spi-device
       * akin to https://github.com/Jorgen-VikingGod/node-rpi-ws2801
     * test out LED strip to make sure it's not busted
-  * Alarm#snooze
-    * make #updateNow() do nothing if new now < current now
   * snooze/on/off button
     * toggle between on/off, setting that state for N minutes
   * gamma correction
@@ -25,6 +21,8 @@
   * production-ize
     * caddy?
     * expose via Oauth gateway?
+  * assertions on animation/gradient config
+    * avoid duplicate indices in schedule and gradients
 * todone
   * gradient formula
   * be able to get keyframes for a given point in time
@@ -37,6 +35,10 @@
     * array of daily offsets?
   * "now" state determines current keyframes
     * based on difference between now and alarm time, including warmup, cooldown
+  * make LED schedule configuration rather than inside of code
+    * config/default vs config/test ?
+  * Alarm#snooze (made it #dismiss instead of snooze)
+    * make #updateNow() do nothing if new now < current now
 * todistract
   * once the alarm is going off, flash the lights?
     * that sounds kind of unpleasant, but maybe a pulse?

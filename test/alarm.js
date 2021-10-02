@@ -99,7 +99,7 @@ describe('Alarm', function() {
     });
 
     context('when the date passed in is a day of the week that has no alarm set', function() {
-      it('should return -Infinity', async function() {
+      it('should return an offset that will result in a disabled alarm', async function() {
         const expected = [
           {
             input: '2006-01-01T06:00:00',
@@ -178,6 +178,159 @@ describe('Alarm', function() {
         [-18],
         [0],
       ]);
+    });
+
+    context('when the alarm is disabled until a time', function() {
+      let now;
+      let resume_at;
+
+      beforeEach(async function() {
+        now = new Date('2000-01-01T00:00:00.000Z');
+        resume_at = null;
+      });
+
+      context('that is after now', function() {
+        beforeEach(async function() {
+          resume_at = new Date(now.valueOf() + 1000);
+          inst.resumeAt(resume_at);
+        });
+
+        it('should use the reactivate time to determine the offset', async function() {
+          this.sinon.spy(inst, 'determineOffset');
+
+          inst.updateNow(now);
+
+          expect(inst.determineOffset.args).to.deep.equal([
+            [resume_at],
+          ]);
+
+          expect(inst._resume_at).to.deep.equal(resume_at);
+        });
+      });
+
+      context('that is before now', function() {
+        beforeEach(async function() {
+          resume_at = new Date(now.valueOf() - 1000);
+          inst.resumeAt(resume_at);
+        });
+
+        it('should use now to determine the offset', async function() {
+          this.sinon.spy(inst, 'determineOffset');
+
+          inst.updateNow(now);
+
+          expect(inst.determineOffset.args).to.deep.equal([
+            [now],
+          ]);
+        });
+
+        it('should clear the reactivation time', async function() {
+          inst.updateNow(now);
+
+          expect(inst._resume_at).to.deep.equal(null);
+        });
+      });
+    });
+  });
+
+  describe('#resumeAt', function() {
+    it('record the time that it should reactivate', async function() {
+      inst.resumeAt(new Date('2010-01-01T00:00:00.000Z'));
+
+      expect(inst._resume_at).to.deep.equal(new Date('2010-01-01T00:00:00.000Z'));
+    });
+
+    it('should return whatever the current state is', async function() {
+      expect(inst.resumeAt()).to.deep.equal(null);
+      expect(inst.resumeAt(undefined)).to.deep.equal(null);
+      expect(inst.resumeAt(0)).to.deep.equal(0);
+      expect(inst.resumeAt()).to.deep.equal(0);
+      expect(inst.resumeAt(undefined)).to.deep.equal(0);
+    });
+  });
+
+  describe('#dismiss', function() {
+    let now;
+
+    beforeEach(async function() {
+      now = new Date('2021-01-01T05:50:00');
+    });
+
+    it('should freeze the alarm until the end of the current alarm cycle', async function() {
+      const clock = this.sinon.useFakeTimers(now);
+      inst.dismiss();
+
+      expect(inst._resume_at).to.deep.equal(new Date('2021-01-01T06:10:00'));
+    });
+
+    context('when it is before the alarm', function() {
+      beforeEach(async function() {
+        now = new Date('2021-01-01T03:00:00');
+      });
+
+      it('should leave the state alone', async function() {
+        const clock = this.sinon.useFakeTimers(now);
+        inst.dismiss();
+
+        expect(inst._resume_at).to.deep.equal(null);
+      });
+    });
+
+    context('on a day that does not have an alarm', function() {
+      beforeEach(async function() {
+        this.sinon.stub(inst, 'getAlarmTimeForDate').returns(null);
+      });
+
+      it('should leave the state alone', async function() {
+        const clock = this.sinon.useFakeTimers(now);
+        inst.dismiss();
+
+        expect(inst._resume_at).to.deep.equal(null);
+      });
+    });
+  });
+
+  describe('#getAlarmTimeForDate', function() {
+    it('should return the alarm time for the provided date', async function() {
+      const expected = [
+        {
+          input: '2006-01-01T06:00:00',
+          output: null,
+        },
+        {
+          input: '2006-01-02T06:00:00',
+          output: 21600000,
+        },
+        {
+          input: '2006-01-03T06:00:00',
+          output: 21600000,
+        },
+        {
+          input: '2006-01-04T06:00:00',
+          output: 21600000,
+        },
+        {
+          input: '2006-01-05T06:00:00',
+          output: 21600000,
+        },
+        {
+          input: '2006-01-06T06:00:00',
+          output: 21600000,
+        },
+        {
+          input: '2006-01-07T06:00:00',
+          output: null,
+        },
+      ];
+
+      const actual = expected.map(({ input }) => {
+        return {
+          input,
+          output: inst.getAlarmTimeForDate(new Date(input)),
+        };
+      });
+
+      expect(actual).to.deep.equal(expected);
     });
   });
 });

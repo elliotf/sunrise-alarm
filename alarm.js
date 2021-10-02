@@ -1,6 +1,7 @@
 const LedString = require('./led_string');
 const KeyFrames = require('./key_frames');
 const util = require('./util');
+const { DateTime } = require('luxon');
 
 const minute_in_ms = 60*1000;
 const hour_in_ms = 60*minute_in_ms;
@@ -24,6 +25,8 @@ class Alarm {
       throw new Error('Alarm schedule does not match the number of days in the week');
     }
 
+    this._resume_at = null;
+
     this.leds = new LedString({
       width: this.width,
       height: this.height,
@@ -36,10 +39,8 @@ class Alarm {
 
   determineOffset(d) {
     const offset = d.getTimezoneOffset();
-    const day_index = d.getDay();
-    const alarm_time_ms = this.alarm_schedule[day_index];
+    const alarm_time_ms = this.getAlarmTimeForDate(d);
     if (null == alarm_time_ms) {
-      // no alarm set
       return -Infinity;
     }
     const t = d.valueOf();
@@ -61,8 +62,48 @@ class Alarm {
   }
 
   updateNow(d) {
+    if (this._resume_at > d) {
+      this.updateOffset(this.determineOffset(this._resume_at));
+      return;
+    } else {
+      this.resumeAt(null);
+    }
     const offset = this.determineOffset(d);
     this.updateOffset(offset);
+  }
+
+  // disable the alarm until after a given time, for snooze/dismiss/disable
+  resumeAt(d) {
+    if (undefined !== d) {
+      this._resume_at = d;
+    }
+
+    return this._resume_at;
+  }
+
+  dismiss() {
+    const now = new Date();
+    const offset = this.determineOffset(now);
+    if (offset < -1) {
+      return;
+    }
+
+    const day_start = DateTime.fromJSDate(now).startOf('day');
+
+    const alarm_time_ms = this.getAlarmTimeForDate(now);
+    const alarm_start = day_start.plus({
+      milliseconds: alarm_time_ms,
+    });
+    const alarm_end = alarm_start.plus({
+      milliseconds: this.cool_down_time_ms,
+    });
+
+    this.resumeAt(alarm_end.toJSDate());
+  }
+
+  getAlarmTimeForDate(d) {
+    const day_index = d.getDay();
+    return this.alarm_schedule[day_index];
   }
 }
 

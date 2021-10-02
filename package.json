@@ -6,7 +6,7 @@
     "build": "DISABLE_LOGGING=1 rollup -c",
     "dev": "DISABLE_LOGGING=1 rollup -c -w",
     "start": "sirv public --no-clear",
-    "test": "DISABLE_LOGGING=1 NODE_CONFIG_ENV=test mocha --exit -r app.js --check-leaks --recursive -R dot test",
+    "test": "TZ='America/Chicago' DISABLE_LOGGING=1 NODE_CONFIG_ENV=test mocha --exit -r app.js --check-leaks --recursive -R dot test",
     "test:watch": "nodemon -e js,json,yaml --exec bash -c 'time npm test; date' ."
   },
   "devDependencies": {
@@ -25,6 +25,7 @@
   "dependencies": {
     "chai": "^4.3.4",
     "express": "^4.17.1",
+    "luxon": "^2.0.2",
     "mocha": "^9.1.1",
     "pino": "^6.13.3",
     "pino-pretty": "^7.0.1",
