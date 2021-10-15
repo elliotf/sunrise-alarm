@@ -5,6 +5,15 @@
     * find a ws2801 library or make one using https://github.com/fivdi/spi-device
       * akin to https://github.com/Jorgen-VikingGod/node-rpi-ws2801
     * test out LED strip to make sure it's not busted
+    * LED strip's (odd?) wiring colors
+      * SPI
+        * BLUE: GND
+        * RED: SI (GPIO 10, PIN 19)
+        * GREEN: CLK (GPIO 11, PIN 23)
+        * BLACK: 5V
+      * power
+        * RED: 5V
+        * BLACK: GND
   * dismiss/on/off button
     * toggle between on/off
     * setting that state for N minutes?
