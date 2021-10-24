@@ -1,6 +1,9 @@
 include <lumpyscad/lib.scad>;
 
-resolution = 32;
+pi_approx = 3.14159;
+tolerance = 0.2;
+
+resolution = 128;
 
 psu_width = 100; // actual is 98, but cheapo PSU is not square
 psu_height = 43;
@@ -9,21 +12,89 @@ psu_indent_terminal = 15.5;
 psu_indent_opposite_wiring = 7.5;
 
 extrude_width = 0.5;
-extrude_height = 0.3;
+extrude_height = 0.28;
 wall_thickness = extrude_width*2;
 floor_thickness = extrude_height*8;
+rounded_diam = wall_thickness*2;
+
+keyswitch_hole_side = 14 + tolerance;
+keyswitch_retainer_ledge_thickness = 1.2;
+keycap_hole_side = 20 + rounded_diam;
 
 sheet_metal_thickness = 1.5;
 
-room_for_wires = 2*inch;
-
-screw_diam = 4.5;
-screw_head_diam = 12;
+led_strip_length = 1000;
 
 angle_aluminum_side = 1.5*inch; // FIXME: actually measure
 angle_aluminum_thickness = 1/8*inch; // FIXME: actually measure
+angle_aluminum_length = led_strip_length-1/2*inch;
+angle_aluminum_from_board = 1/4*inch;
 
-plywood_thickness = 1/2*inch;
+extra_space_for_angle_aluminum = 1*inch;
+
+overall_rearside_depth = psu_height + wall_thickness*2;
+overall_width = psu_width+wall_thickness*4;
+
+plywood_thickness = 17.5; // 3/4*inch;
+//plywood_width = 4*inch;
+plywood_width = overall_width;
+//plywood_length = 48*inch;
+plywood_length = angle_aluminum_length+extra_space_for_angle_aluminum;
+
+screw_diam = 4.5;
+screw_head_diam = 12;
+screw_length = 31;
+screw_hole_body_length = screw_length-plywood_thickness+1; // + 1 to avoid screw poking out other side of wood
+
+wiring_hole_from_end = extra_space_for_angle_aluminum*0.3;
+wiring_hole_diam = 1/2*inch;;
+
+end_cap_thickness = 1/2*inch;
+end_cap_center_pos_y = front*(angle_aluminum_from_board+1.25*inch);
+end_cap_diam = plywood_width;
+top_brace_height = 4*inch;
+screw_area_width = screw_head_diam+wall_thickness*4;
+top_cavity_width = overall_width-screw_area_width*2;
+
+room_for_wires = 2.25*inch;
+
+rpi_mount_thickness = 4;
+rpi_detent_diam = 4;
+rpi_detent_from_top = 12+rpi_detent_diam/2;
+rpi_from_top = top_brace_height - rasp_a_plus_max_x*0.8;
+
+echo("end_cap_diam (mm): ", end_cap_diam);
+echo("end_cap_diam (in): ", end_cap_diam/25.4);
+
+diffuser_width = (pi_approx*end_cap_diam)/2 + 2*(end_cap_center_pos_y);
+diffuser_length = plywood_length;
+
+cover_width = diffuser_width + 2*(plywood_thickness+overall_rearside_depth);
+cover_length = diffuser_length+end_cap_thickness*2;
+
+echo("cover_width (mm): ", cover_width);
+echo("cover_width (in): ", cover_width/inch);
+echo("cover_length (mm): ", cover_length);
+echo("cover_length (in): ", cover_length/inch);
+
+echo("diffuser_width (mm): ", diffuser_width);
+echo("diffuser_width (in): ", diffuser_width/inch);
+echo("diffuser_length (mm): ", diffuser_length);
+echo("diffuser_length (in): ", diffuser_length/inch);
+
+echo("plywood_width (mm): ", plywood_width);
+echo("plywood_width (in): ", plywood_width/inch);
+echo("plywood_length (mm): ", plywood_length);
+echo("plywood_length (in): ", plywood_length/inch);
+echo("plywood_thickness (mm): ", plywood_thickness);
+echo("plywood_thickness (in): ", plywood_thickness/inch);
+
+module rpi_detent_profile(swell_by=0) {
+  hull() {
+    square([0.01,rpi_detent_diam*1.5+swell_by],center=true);
+    accurate_circle(rpi_detent_diam+swell_by,resolution);
+  }
+}
 
 module angle_aluminum_profile() {
   for(side=[left,right]) {
@@ -81,135 +152,31 @@ module psu() {
   }
 }
 
-module psu_mount() {
-  case_overlap = 5;
-  overall_depth = psu_height + wall_thickness*2;
-  overall_height = case_overlap + psu_indent_terminal + room_for_wires + wall_thickness*2;
-  overall_width = psu_width+wall_thickness*4;
 
-  screw_area_width = screw_head_diam+wall_thickness*4;
-  screw_area_height = room_for_wires;
-  screw_area_depth = psu_height;
-
-  module cover_profile() {
-    translate([0,-overall_depth/2+wall_thickness,0]) {
-      rounded_square(overall_width,wall_thickness*2,wall_thickness*2,resolution);
-    }
-    for(x=[left,right]) {
-      mirror([x-1,0,0]) {
-        translate([psu_width/2+wall_thickness,0,0]) {
-          rounded_square(wall_thickness*2,overall_depth,wall_thickness*2,resolution);
-        }
-      }
-    }
-  }
-
-  module screw_mount_profile() {
-    translate([0,-wall_thickness,0]) {
-      rounded_square(overall_width,wall_thickness*2,wall_thickness*2,resolution);
-    }
-    for(x=[left,right]) {
-      mirror([x-1,0,0]) {
-        translate([overall_width/2-screw_area_width/2,-screw_area_depth/2,0]) {
-          difference() {
-            hull() {
-              translate([0,front*screw_area_depth/4,0]) {
-                square([screw_area_width,screw_area_depth/2],center=true);
-              }
-              translate([0,rear*screw_area_depth/4,0]) {
-                rounded_square(screw_area_width,screw_area_depth/2,wall_thickness*2);
-              }
-            }
-          }
-          translate([-screw_area_width/2,-screw_area_depth/2,0]) {
-            rotate([0,0,90]) {
-              round_corner_filler_profile(wall_thickness*4,resolution);
-            }
-          }
-          translate([-screw_area_width/2,screw_area_depth/2-wall_thickness*2,0]) {
-            rotate([0,0,180]) {
-              round_corner_filler_profile(wall_thickness*4,resolution);
-            }
-          }
-        }
-      }
-    }
-  }
+module angle_aluminum_mount_base() {
+  mount_width = screw_diam + 1/2*inch;
+  mount_length = mount_width*2;
+  max_height = angle_aluminum_from_board+mount_width*0.4;
 
   module body() {
-    translate([0,front*overall_depth/2,]) {
-      translate([0,0,case_overlap+psu_indent_terminal-overall_height/2]) {
-        linear_extrude(height=overall_height-0.2,center=true,convexity=3) {
-          cover_profile();
-        }
-        // bottom
-        translate([0,0,-overall_height/2+floor_thickness/2]) {
-          hull() {
-            rounded_cube(overall_width,overall_depth,floor_thickness,wall_thickness*2);
-            // flange to attach to bottom of plywood
-            translate([0,overall_depth/2,0]) {
-              rounded_cube(overall_width,plywood_thickness*2,floor_thickness,plywood_thickness);
-            }
-          }
-        }
-      }
-    }
-    translate([0,0,-room_for_wires/2-0.1]) {
-      linear_extrude(height=room_for_wires+0.2,center=true,convexity=3) {
-        screw_mount_profile();
-      }
+    translate([0,0,max_height/2]) {
+      rounded_cube(mount_width,mount_length,max_height,rounded_diam,resolution);
     }
   }
 
   module holes() {
-    // screw holes
-    for(x=[left,right]) {
-      // face of plywood
-      translate([x*(psu_width/2-screw_head_diam/2),0,-room_for_wires/2]) {
-        rotate([90,0,0]) {
-          hole(screw_diam,overall_height*2,resolution);
-          translate([0,0,overall_height/2+15]) {
-            hole(screw_head_diam,overall_height,8);
+    hole(screw_diam,max_height*3,resolution);
+    translate([0,0,angle_aluminum_from_board]) {
+      max_side = 10*inch;
+      rotate([90,0,0]) {
+        rotate([0,0,45]) {
+          translate([max_side/2,max_side/2,0]) {
+            rounded_cube(max_side,max_side,mount_length*2,rounded_diam);
           }
         }
-      }
-
-      // end of plywood
-      translate([x*(psu_width/4),plywood_thickness/2,0]) {
-        hole(screw_diam,overall_height*2,resolution);
-      }
-    }
-
-    // room for cables/wiring
-    translate([0,front*overall_depth/2,1]) {
-      depth = overall_depth-wall_thickness*4;
-      hull() {
-        rounded_cube(psu_width-wall_thickness*2,depth,2,wall_thickness*4,resolution);
-        rounded_cube(overall_width-screw_area_width*2,depth,room_for_wires*0.9,wall_thickness*4,resolution);
-      }
-    }
-
-    // high voltage input
-    power_cable_diam = 12;
-    translate([25,-wall_thickness*2-power_cable_diam/2,-room_for_wires]) {
-      hole(power_cable_diam,20,resolution);
-
-      // zip tie strain relief -- or on the plywood backing?
-      zip_tie_spacing = 10;
-      for(x=[-1,-2],y=[front,rear]) {
-        translate([-power_cable_diam/2+(x*zip_tie_spacing),y*power_cable_diam/4,0]) {
-          rounded_cube(3,2,20,2);
+        translate([0,mount_width/2-rounded_diam/2*0.2,0]) {
+          rounded_cube(rounded_diam/2,mount_width,mount_length*2,rounded_diam/2);
         }
-      }
-    }
-
-    // low voltage output
-    low_voltage_from_side = psu_width/2;
-    output_hole_width = 10;
-    output_hole_height = 15;
-    translate([psu_width/2-low_voltage_from_side,front*overall_depth,-output_hole_height/2-1]) {
-      rotate([90,0,0]) {
-        rounded_cube(output_hole_width,output_hole_height,psu_height/2,2,8);
       }
     }
   }
@@ -220,25 +187,563 @@ module psu_mount() {
   }
 }
 
-module assembly() {
-  translate([0,0,psu_length/2+room_for_wires]) {
-    rotate([90,0,0]) {
-      % psu();
+module screen_support() {
+  module body() {
+
+  }
+
+  module holes() {
+
+  }
+
+  difference() {
+    body();
+    holes();
+  }
+}
+
+module end_cap_base_profile() {
+  module body() {
+    hull() {
+      translate([0,end_cap_center_pos_y,-end_cap_thickness/2]) {
+        accurate_circle(end_cap_diam,resolution);
+      }
+      translate([0,plywood_thickness+overall_rearside_depth/2,0]) {
+        rounded_square(end_cap_diam,overall_rearside_depth,rounded_diam,resolution);
+      }
+    }
+  }
+
+  module holes() {
+    for(x=[left,right]) {
+      translate([x*(end_cap_diam*0.3),plywood_thickness/2,0]) {
+        accurate_circle(screw_diam,resolution/2);
+      }
+    }
+  }
+
+  difference() {
+    body();
+    holes();
+  }
+}
+
+module end_cap_holes(side=top) {
+  threaded_hole_depth = 8;
+
+  sunken_area_diam = end_cap_diam-2*(threaded_hole_depth+wall_thickness*2);
+
+  // screw holes
+  translate([0,end_cap_center_pos_y,end_cap_thickness/2*side]) {
+    num_screw_holes = 4;
+    angle_between_holes = 180/(num_screw_holes-1);
+    for(i=[0:num_screw_holes-1]) {
+      rotate([0,0,i*angle_between_holes]) {
+        translate([front*end_cap_diam/2,0,0]) {
+          rotate([0,90,0]) {
+            hole(m3_threaded_insert_diam,threaded_hole_depth*2,resolution);
+          }
+        }
+      }
+    }
+
+    depth_to_go = abs(end_cap_center_pos_y)+plywood_thickness+overall_rearside_depth-10;
+    for(x=[left,right],y=[depth_to_go/2,depth_to_go]) {
+      translate([x*overall_width/2,y,0]) {
+        rotate([0,90,0]) {
+          hole(m3_threaded_insert_diam,threaded_hole_depth*2,resolution);
+        }
+      }
     }
   }
 
 
-  translate([0,0,room_for_wires]) {
-    psu_mount();
+  // vent hole(s)
+  inset_amount = 8;
+  num_vents = 2;
+  vent_diam = rounded_diam;
+  vent_width = sunken_area_diam*0.6;
+  vent_spacing = inset_amount+4+vent_diam;
+  for(y=[0:num_vents-1]) {
+    translate([0,-inset_amount-vent_diam/2-y*(vent_spacing),0]) {
+      rounded_cube(vent_width,vent_diam,end_cap_thickness*3,vent_diam,resolution);
+    }
   }
+  /*
+  num_vent_holes = 6;
+  vent_hole_spacing_diam = sunken_area_diam*0.8;
+  vent_hole_diam = (pi_approx*vent_hole_spacing_diam)*0.7/(num_vent_holes+wall_thickness*4);
+  angle_per_hole = 360/num_vent_holes;
 
-  angle_length = 1000;
-  // angle_length = psu_length;
-  translate([0,front*(psu_height+angle_aluminum_side*0.85),angle_length/2]) {
-    rotate([0,0,45]) {
-      % angle_aluminum(angle_length);
+  translate([0,end_cap_center_pos_y,0]) {
+    hole(vent_hole_diam,end_cap_thickness*4,resolution);
+    for(i=[0:num_vent_holes-1]) {
+      rotate([0,0,i*angle_per_hole]) {
+        translate([0,vent_hole_spacing_diam/2-vent_hole_diam/2,0]) {
+          hole(vent_hole_diam,end_cap_thickness*4,resolution);
+        }
+      }
+    }
+  }
+  */
+
+  // reduce plastic usage
+  hull() {
+    depth = end_cap_thickness-extrude_height*2;
+    translate([0,end_cap_center_pos_y,0]) {
+      difference() {
+        hole(sunken_area_diam,2*depth,resolution);
+        translate([0,sunken_area_diam/2,0]) {
+          cube([sunken_area_diam+1,sunken_area_diam,end_cap_thickness*3],center=true);
+        }
+      }
+    }
+    translate([0,-rounded_diam,0]) {
+      rounded_cube(sunken_area_diam,rounded_diam*2,2*depth,rounded_diam*2,resolution);
     }
   }
 }
 
+module top_end_cap() {
+  rpi_retainer_thickness = wall_thickness*2;
+  rpi_retainer_width = (top_cavity_width-rasp_a_plus_max_y-1)/2;
+  rpi_retainer_length = top_brace_height-rpi_from_top;
+
+  module body() {
+    translate([0,0,end_cap_thickness/2]) {
+      linear_extrude(height=end_cap_thickness,center=true,convexity=3) {
+        end_cap_base_profile();
+      }
+    }
+
+    for(x=[left,right]) {
+      translate([x*(top_cavity_width/2+screw_area_width/2),plywood_thickness+overall_rearside_depth/2,-top_brace_height/2]) {
+        rounded_cube(screw_area_width,overall_rearside_depth,top_brace_height,rounded_diam,resolution);
+      }
+
+      translate([x*top_cavity_width/2,plywood_thickness+0.5,-top_brace_height+rpi_retainer_length/2]) {
+        translate([0,rpi_mount_thickness+rpi_retainer_thickness/2,0]) {
+          rounded_cube(rpi_retainer_width*2,rpi_retainer_thickness,rpi_retainer_length,rounded_diam,resolution);
+        }
+        overall_thickness = rpi_mount_thickness+rpi_retainer_thickness;
+        translate([0,overall_thickness/2,rpi_retainer_length/2]) {
+          translate([0,0,0.5]) {
+            hull() {
+              rounded_cube(rpi_retainer_width*2,overall_thickness,1,rounded_diam,resolution);
+              translate([x*rpi_retainer_width,0,rpi_retainer_width*3]) {
+                rounded_cube(rounded_diam,overall_thickness,1,rounded_diam,resolution);
+              }
+            }
+          }
+
+          translate([0,0.2,-rpi_detent_from_top]) {
+            rotate([90,0,0]) {
+              linear_extrude(height=overall_thickness-0.6,center=true,convexity=3) {
+                rpi_detent_profile(0);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  module holes() {
+    for(x=[left,right],z=[top,bottom]) {
+      translate([x*(end_cap_diam/2-screw_area_width/2),plywood_thickness+overall_rearside_depth,-top_brace_height/2+z*(top_brace_height*0.45-screw_area_width/2)]) {
+        // face of plywood
+        rotate([90,0,0]) {
+          hole(screw_diam,overall_rearside_depth*3,resolution);
+          hole(screw_head_diam,2*(overall_rearside_depth-screw_hole_body_length),8);
+        }
+      }
+    }
+
+    // slot/hook to hang on the wall with as well as a vent hole
+    // slot_hole_width = (end_cap_diam-screw_area_width*2-extrude_width)*0.6;
+    slot_hole_width = overall_width*0.5;
+    slot_hole_height = end_cap_thickness+0.05;
+    slot_hole_depth = 20;
+    translate([0,plywood_thickness+overall_rearside_depth-extrude_width*4-slot_hole_depth/2,-0.1]) {
+      hull() {
+        rounded_cube(overall_width-screw_area_width*2-wall_thickness*3,slot_hole_depth,0.2,rounded_diam,resolution);
+        rounded_cube(slot_hole_width,rounded_diam,0.2+slot_hole_height*2,rounded_diam,resolution);
+      }
+    }
+    translate([0,plywood_thickness+keycap_hole_side/2,end_cap_thickness]) {
+      switch_hole_depth = end_cap_thickness-keyswitch_retainer_ledge_thickness;
+
+      for(x=[left,0,right]) {
+        translate([x*(keycap_hole_side*1+wall_thickness*2),0,0]) {
+          rounded_cube(keycap_hole_side,keycap_hole_side,switch_hole_depth*2,rounded_diam,resolution);
+          cube([keyswitch_hole_side,keyswitch_hole_side,end_cap_thickness*3],center=true);
+
+          // allow bridging across the hole
+          cube([keyswitch_hole_side,keycap_hole_side,2*(switch_hole_depth+extrude_height)],center=true);
+        }
+      }
+    }
+
+    // vent holes for psu/rpi
+    translate([0,plywood_thickness+overall_rearside_depth/2,0]) {
+    }
+
+    end_cap_holes(top);
+  }
+
+  difference() {
+    body();
+    holes();
+  }
+}
+
+module bottom_end_cap() {
+  case_overlap = 5;
+  overall_height = case_overlap + psu_indent_terminal + room_for_wires + 5;
+
+  module body() {
+    translate([0,plywood_thickness+overall_rearside_depth/2,-end_cap_thickness+overall_height/2]) {
+      rounded_cube(overall_width,overall_rearside_depth,overall_height,rounded_diam,resolution);
+    }
+    translate([0,plywood_thickness,-end_cap_thickness+overall_height-case_overlap-psu_indent_terminal]) {
+      translate([0,0,psu_length/2]) {
+        rotate([0,0,180]) {
+          rotate([90,0,0]) {
+            % psu();
+          }
+        }
+      }
+    }
+    translate([0,0,-end_cap_thickness/2]) {
+      linear_extrude(height=end_cap_thickness,center=true,convexity=3) {
+        end_cap_base_profile();
+      }
+    }
+  }
+
+  module holes() {
+    translate([0,plywood_thickness,-end_cap_thickness]) {
+      translate([0,overall_rearside_depth,0]) {
+        // cube([overall_width*2,overall_rearside_depth,overall_height*3],center=true);
+      }
+      translate([0,0,overall_height-case_overlap]) {
+        translate([0,psu_height/2-0.05,0]) {
+          rounded_cube(psu_width,psu_height+0.1,2*(psu_indent_terminal),extrude_width*2,resolution);
+        }
+        for(x=[left,right]) {
+          mirror([x-1,0,0]) {
+            translate([psu_width/2,0,0]) {
+              round_corner_filler(wall_thickness*2,psu_indent_terminal*2);
+            }
+          }
+        }
+
+        // room for cables/wiring
+        translate([0,overall_rearside_depth/2,-psu_indent_terminal+1]) {
+          depth = overall_rearside_depth-wall_thickness*4;
+          hull() {
+            rounded_cube(psu_width-wall_thickness*2,depth,2,wall_thickness*4,resolution);
+            rounded_cube(overall_width-screw_area_width*2,depth,2*(screw_area_width-wall_thickness*2),wall_thickness*4,resolution);
+          }
+          rounded_cube(overall_width-screw_area_width*2,depth,(room_for_wires)*2,wall_thickness*4,resolution);
+        }
+      }
+
+      for(x=[left,right]) {
+        // face of plywood
+        translate([x*(psu_width/2-screw_head_diam/2),0,room_for_wires-screw_area_width-extrude_height*4]) {
+          rotate([-90,0,0]) {
+            hole(screw_diam,overall_height*2,resolution);
+            translate([0,0,overall_height/2+15]) {
+              hole(screw_head_diam,overall_height,8);
+            }
+          }
+        }
+      }
+
+      // access angle aluminum post retainer screw
+      translate([0,0,room_for_wires-screw_area_width]) {
+        rotate([-90,0,0]) {
+          hole(screw_head_diam,overall_height*3,8);
+        }
+      }
+
+      // high voltage input
+      power_cable_diam = 15;
+      translate([-20,psu_height-wall_thickness*2-power_cable_diam/2,0]) {
+        hole(power_cable_diam,end_cap_thickness*4,resolution);
+
+        // zip tie strain relief -- or on the plywood backing?
+        zip_tie_spacing = 10;
+        for(x=[-1,-2],y=[front,rear]) {
+          translate([power_cable_diam/2-(x*zip_tie_spacing),y*power_cable_diam/3,0]) {
+            rounded_cube(3,2,end_cap_thickness*4,2);
+          }
+        }
+      }
+    }
+
+    translate([0,0,wiring_hole_from_end]) {
+      rotate([90,0,0]) {
+        hole(wiring_hole_diam,psu_height,8);
+      }
+    }
+
+    end_cap_holes(bottom);
+  }
+
+  difference() {
+    body();
+    holes();
+  }
+}
+
+module angle_aluminum_assembly() {
+  translate([0,0,angle_aluminum_length/2+extra_space_for_angle_aluminum/2]) {
+    translate([0,front*angle_aluminum_from_board,0]) {
+      % color("lightgrey", 0.99) {
+        difference() {
+          rotate([0,0,-135]) {
+            angle_aluminum(angle_aluminum_length);
+          }
+          position_angle_aluminum_mounts() {
+            hole(screw_diam,plywood_thickness*4,resolution/4);
+          }
+        }
+      }
+    }
+    position_angle_aluminum_mounts() {
+      angle_aluminum_mount_base();
+    }
+  }
+}
+
+module plywood_plank() {
+  module body() {
+    cube([plywood_width,plywood_thickness,plywood_length],center=true);
+  }
+
+  module holes() {
+    position_angle_aluminum_mounts() {
+      hole(screw_diam-1.5,plywood_thickness*4,resolution/4);
+    }
+
+    for(z=[top,bottom]) {
+      translate([0,0,z*(plywood_length/2-wiring_hole_from_end)]) {
+        rotate([90,0,0]) {
+          // wire access hole
+          hole(wiring_hole_diam,100,resolution);
+        }
+      }
+    }
+  }
+
+  difference() {
+    body();
+    holes();
+  }
+}
+
+module rpi_mount() {
+  mount_height = 10;
+  hole_diam = 2.3;
+  rounded_diam = wall_thickness*4+rpi_detent_diam;
+
+  width = top_cavity_width-1;
+  depth = rasp_a_plus_max_x;
+
+  module position_rpi() {
+    rotate([0,0,90]) {
+      translate([-rasp_a_plus_max_x/2,-rasp_a_plus_max_y/2,mount_height]) {
+        children();
+      }
+    }
+  }
+
+  module body() {
+    translate([0,0,rpi_mount_thickness/2]) {
+      linear_extrude(height=rpi_mount_thickness,center=true,convexity=3) {
+        plate_profile();
+      }
+    }
+
+    position_rpi() {
+      position_pi_holes() {
+        translate([0,0,-mount_height/2]) {
+          hole(hole_diam+wall_thickness*4,mount_height,resolution);
+        }
+      }
+    }
+  }
+
+  module plate_profile() {
+    spring_center_diam = rpi_detent_diam*1.6;
+    spring_wall_thickness = extrude_width*3;
+    overall_spring_diam = spring_center_diam+spring_wall_thickness*2;
+
+    module spring_profile() {
+      module position_hole() {
+        translate([-overall_spring_diam/2,overall_spring_diam/2,0]) {
+          children();
+        }
+      }
+
+      module body() {
+        intersection() {
+          position_hole() {
+            intersection() {
+              hull() {
+                accurate_circle(overall_spring_diam,resolution);
+                translate([-overall_spring_diam/2,0,0]) {
+                  square([overall_spring_diam,overall_spring_diam],center=true);
+                }
+              }
+              translate([0,-overall_spring_diam/2,0]) {
+                square([overall_spring_diam*3,overall_spring_diam],center=true);
+              }
+            }
+          }
+        }
+        position_hole() {
+          hull() {
+            translate([overall_spring_diam/2-spring_wall_thickness/2,0,0]) {
+              square([spring_wall_thickness,0.1],center=true);
+
+              translate([0,-overall_spring_diam/2+rpi_detent_from_top-rpi_detent_diam*0.6-spring_wall_thickness/2,0]) {
+                accurate_circle(spring_wall_thickness,resolution);
+              }
+            }
+          }
+        }
+      }
+
+      module holes() {
+        position_hole() {
+          accurate_circle(spring_center_diam,resolution);
+        }
+      }
+
+      difference() {
+        body();
+        holes();
+      }
+    }
+
+    module body() {
+      rounded_square(width,depth,rounded_diam,resolution);
+    }
+
+    module bridges() {
+      for(x=[left,right]) {
+        mirror([x-1,0,0]) {
+          translate([width/2,-depth/2,0]) {
+            spring_profile();
+          }
+        }
+      }
+    }
+
+    module holes() {
+      for(x=[left,right]) {
+        mirror([x-1,0,0]) {
+          translate([width/2,-depth/2,0]) {
+            hull() {
+              rounded_square(2*(rpi_detent_diam+wall_thickness),2*(rpi_detent_from_top-rpi_detent_diam/2),rounded_diam,resolution);
+              translate([0,rpi_detent_from_top,0]) {
+                rpi_detent_profile(0.3);
+              }
+              translate([-overall_spring_diam/2,overall_spring_diam/2,0]) {
+                accurate_circle(spring_center_diam,resolution);
+              }
+            }
+          }
+        }
+      }
+      /*
+      for(x=[left,right]) {
+        translate([x*width/2,-depth/2,0]) {
+          translate([0,rpi_detent_from_top,0]) {
+            rpi_detent_profile(0.3);
+          }
+
+          translate([-x*rounded_diam/2,rounded_diam/2,0]) {
+            hull() {
+              accurate_circle(rpi_detent_diam,resolution);
+
+              translate([0,rpi_detent_diam-wall_thickness*2,0]) {
+                accurate_circle(rpi_detent_diam,resolution);
+              }
+            }
+          }
+        }
+
+        translate([0,0,0]) {
+        }
+      }
+      */
+    }
+
+    difference() {
+      body();
+      holes();
+    }
+    bridges();
+  }
+
+  module holes() {
+    position_rpi() {
+      position_pi_holes() {
+        hole(hole_diam,mount_height*3,resolution);
+      }
+    }
+  }
+
+  position_rpi() {
+    % raspi_3a();
+  }
+
+  difference() {
+    body();
+    holes();
+  }
+}
+
+module position_angle_aluminum_mounts() {
+  num_posts = 4;
+  total_space = angle_aluminum_length-35;
+  spacing = total_space/(num_posts-1);
+  for(z=[0:num_posts-1]) {
+    translate([0,0,total_space/2-z*spacing]) {
+      rotate([90,0,0]) {
+        children();
+      }
+    }
+  }
+}
+
+module assembly() {
+  translate([0,0,plywood_length/2]) {
+    translate([0,0,plywood_length/2]) {
+      color("lightblue") top_end_cap();
+    }
+    translate([0,0,-plywood_length/2]) {
+      bottom_end_cap();
+    }
+    translate([0,plywood_thickness/2,0]) {
+      color("white", 0.9) {
+        % plywood_plank();
+      }
+    }
+  }
+
+  translate([0,plywood_thickness,plywood_length-rpi_from_top-rasp_a_plus_max_x/2]) {
+    rotate([-90,0,0]) {
+      rpi_mount();
+    }
+  }
+
+  angle_aluminum_assembly();
+}
+
 assembly();
+//angle_aluminum_mount_base();
