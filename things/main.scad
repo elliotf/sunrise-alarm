@@ -41,6 +41,8 @@ plywood_width = overall_width;
 //plywood_length = 48*inch;
 plywood_length = angle_aluminum_length+extra_space_for_angle_aluminum;
 
+angle_aluminum_mount_screw_diam = 0.19*inch + tolerance*2; // #10 screw with plenty of wiggle room
+
 screw_diam = 4.5;
 screw_head_diam = 12;
 screw_length = 31;
@@ -59,9 +61,9 @@ top_cavity_width = overall_width-screw_area_width*2;
 room_for_wires = 2.25*inch;
 
 rpi_mount_thickness = 4;
-rpi_detent_diam = 4;
-rpi_detent_from_top = 12+rpi_detent_diam/2;
+rpi_detent_height = 5;
 rpi_from_top = top_brace_height - rasp_a_plus_max_x*0.8;
+rpi_detent_from_top = rpi_from_top*.4+rpi_detent_height/2;
 
 echo("end_cap_diam (mm): ", end_cap_diam);
 echo("end_cap_diam (in): ", end_cap_diam/25.4);
@@ -88,13 +90,6 @@ echo("plywood_length (mm): ", plywood_length);
 echo("plywood_length (in): ", plywood_length/inch);
 echo("plywood_thickness (mm): ", plywood_thickness);
 echo("plywood_thickness (in): ", plywood_thickness/inch);
-
-module rpi_detent_profile(swell_by=0) {
-  hull() {
-    square([0.01,rpi_detent_diam*1.5+swell_by],center=true);
-    accurate_circle(rpi_detent_diam+swell_by,resolution);
-  }
-}
 
 module angle_aluminum_profile() {
   for(side=[left,right]) {
@@ -153,10 +148,11 @@ module psu() {
 }
 
 
-module angle_aluminum_mount_base() {
-  mount_width = screw_diam + 1/2*inch;
+module angle_aluminum_mount() {
+  mount_width = angle_aluminum_mount_screw_diam + 1/2*inch;
   mount_length = mount_width*2;
   max_height = angle_aluminum_from_board+mount_width*0.4;
+  rounded_diam = 5;
 
   module body() {
     translate([0,0,max_height/2]) {
@@ -165,7 +161,7 @@ module angle_aluminum_mount_base() {
   }
 
   module holes() {
-    hole(screw_diam,max_height*3,resolution);
+    hole(angle_aluminum_mount_screw_diam,max_height*3,resolution);
     translate([0,0,angle_aluminum_from_board]) {
       max_side = 10*inch;
       rotate([90,0,0]) {
@@ -215,11 +211,6 @@ module end_cap_base_profile() {
   }
 
   module holes() {
-    for(x=[left,right]) {
-      translate([x*(end_cap_diam*0.3),plywood_thickness/2,0]) {
-        accurate_circle(screw_diam,resolution/2);
-      }
-    }
   }
 
   difference() {
@@ -269,6 +260,7 @@ module end_cap_holes(side=top) {
       rounded_cube(vent_width,vent_diam,end_cap_thickness*3,vent_diam,resolution);
     }
   }
+
   /*
   num_vent_holes = 6;
   vent_hole_spacing_diam = sunken_area_diam*0.8;
@@ -287,9 +279,24 @@ module end_cap_holes(side=top) {
   }
   */
 
+  for(x=[left,right]) {
+    translate([x*(end_cap_diam*0.3),plywood_thickness/2,0]) {
+      hole(screw_diam,end_cap_thickness*3,resolution/2);
+      translate([0,0,end_cap_thickness*side]) {
+        hull() {
+          screw_head_diam = 8;
+          base_depth = 1.5;
+          delta = screw_head_diam - screw_diam;
+          hole(screw_head_diam,base_depth*2,resolution/2);
+          hole(screw_diam,2*(delta/2+1.5),resolution/2);
+        }
+      }
+    }
+  }
+
   // reduce plastic usage
   hull() {
-    depth = end_cap_thickness-extrude_height*2;
+    depth = end_cap_thickness-extrude_height*4;
     translate([0,end_cap_center_pos_y,0]) {
       difference() {
         hole(sunken_area_diam,2*depth,resolution);
@@ -306,6 +313,7 @@ module end_cap_holes(side=top) {
 
 module top_end_cap() {
   rpi_retainer_thickness = wall_thickness*2;
+  rpi_retainer_tolerance = 1.2;
   rpi_retainer_width = (top_cavity_width-rasp_a_plus_max_y-1)/2;
   rpi_retainer_length = top_brace_height-rpi_from_top;
 
@@ -321,7 +329,7 @@ module top_end_cap() {
         rounded_cube(screw_area_width,overall_rearside_depth,top_brace_height,rounded_diam,resolution);
       }
 
-      translate([x*top_cavity_width/2,plywood_thickness+0.5,-top_brace_height+rpi_retainer_length/2]) {
+      translate([x*top_cavity_width/2,plywood_thickness+rpi_retainer_tolerance,-top_brace_height+rpi_retainer_length/2]) {
         translate([0,rpi_mount_thickness+rpi_retainer_thickness/2,0]) {
           rounded_cube(rpi_retainer_width*2,rpi_retainer_thickness,rpi_retainer_length,rounded_diam,resolution);
         }
@@ -332,14 +340,6 @@ module top_end_cap() {
               rounded_cube(rpi_retainer_width*2,overall_thickness,1,rounded_diam,resolution);
               translate([x*rpi_retainer_width,0,rpi_retainer_width*3]) {
                 rounded_cube(rounded_diam,overall_thickness,1,rounded_diam,resolution);
-              }
-            }
-          }
-
-          translate([0,0.2,-rpi_detent_from_top]) {
-            rotate([90,0,0]) {
-              linear_extrude(height=overall_thickness-0.6,center=true,convexity=3) {
-                rpi_detent_profile(0);
               }
             }
           }
@@ -384,8 +384,15 @@ module top_end_cap() {
       }
     }
 
-    // vent holes for psu/rpi
-    translate([0,plywood_thickness+overall_rearside_depth/2,0]) {
+    for(x=[left,right]) {
+      translate([x*top_cavity_width/2,plywood_thickness,-rpi_from_top-rpi_detent_from_top]) {
+        hull() {
+          depth = 2*(rpi_mount_thickness+rpi_retainer_tolerance);
+          rotate([0,45,0]) {
+            cube([rpi_detent_height,depth,rpi_detent_height],center=true);
+          }
+        }
+      }
     }
 
     end_cap_holes(top);
@@ -483,6 +490,18 @@ module bottom_end_cap() {
       }
     }
 
+    // vent hole(s)
+    inset_amount = 7;
+    num_vents = 2;
+    vent_diam = rounded_diam;
+    vent_width = overall_width*0.5;
+    vent_spacing = inset_amount+vent_diam;
+    for(y=[0:num_vents-1]) {
+      translate([0,plywood_thickness+wall_thickness*2+vent_diam/2+inset_amount+y*(vent_spacing),0]) {
+        rounded_cube(vent_width,vent_diam,end_cap_thickness*3,vent_diam,resolution);
+      }
+    }
+
     translate([0,0,wiring_hole_from_end]) {
       rotate([90,0,0]) {
         hole(wiring_hole_diam,psu_height,8);
@@ -507,13 +526,13 @@ module angle_aluminum_assembly() {
             angle_aluminum(angle_aluminum_length);
           }
           position_angle_aluminum_mounts() {
-            hole(screw_diam,plywood_thickness*4,resolution/4);
+            hole(angle_aluminum_mount_screw_diam+0.4,plywood_thickness*4,resolution/4);
           }
         }
       }
     }
     position_angle_aluminum_mounts() {
-      angle_aluminum_mount_base();
+      angle_aluminum_mount();
     }
   }
 }
@@ -525,7 +544,7 @@ module plywood_plank() {
 
   module holes() {
     position_angle_aluminum_mounts() {
-      hole(screw_diam-1.5,plywood_thickness*4,resolution/4);
+      hole(angle_aluminum_mount_screw_diam-0.2,plywood_thickness*4,resolution/4);
     }
 
     for(z=[top,bottom]) {
@@ -547,7 +566,9 @@ module plywood_plank() {
 module rpi_mount() {
   mount_height = 10;
   hole_diam = 2.3;
-  rounded_diam = wall_thickness*4+rpi_detent_diam;
+
+  arm_length = 18;
+  arm_thickness = wall_thickness*2;
 
   width = top_cavity_width-1;
   depth = rasp_a_plus_max_x;
@@ -557,6 +578,54 @@ module rpi_mount() {
       translate([-rasp_a_plus_max_x/2,-rasp_a_plus_max_y/2,mount_height]) {
         children();
       }
+    }
+  }
+
+  module plate_profile() {
+    additional_detent_size = 0.1;
+    module body() {
+      difference() {
+        rounded_square(width,depth,rounded_diam,resolution);
+        for(x=[left,right]) {
+          translate([x*width/2,-depth/2+rpi_detent_from_top+arm_length/2-rpi_detent_height/2,0]) {
+            rounded_square(2*(arm_thickness+rpi_detent_height),arm_length+rpi_detent_height,rounded_diam,resolution);
+          }
+        }
+      }
+      for(x=[left,right]) {
+        mirror([x-1,0,0]) {
+          translate([width/2,-depth/2+rpi_detent_from_top,0]) {
+            translate([-arm_thickness/2,arm_length/2,0]) {
+              rounded_square(arm_thickness,arm_length+arm_thickness,arm_thickness,resolution);
+            }
+            translate([-arm_thickness+rpi_detent_height/2,0,0]) {
+              accurate_circle(rpi_detent_height,resolution);
+            }
+            translate([-arm_thickness,arm_length,0]) {
+              rotate([0,0,180]) {
+                round_corner_filler_profile(rounded_diam);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    module holes() {
+      for(x=[left,right]) {
+        mirror([x-1,0,0]) {
+          translate([width/2,-depth/2+rpi_detent_from_top-rpi_detent_height,0]) {
+            rotate([0,0,180]) {
+              round_corner_filler_profile(rounded_diam);
+            }
+          }
+        }
+      }
+    }
+
+    difference() {
+      body();
+      holes();
     }
   }
 
@@ -574,120 +643,6 @@ module rpi_mount() {
         }
       }
     }
-  }
-
-  module plate_profile() {
-    spring_center_diam = rpi_detent_diam*1.6;
-    spring_wall_thickness = extrude_width*3;
-    overall_spring_diam = spring_center_diam+spring_wall_thickness*2;
-
-    module spring_profile() {
-      module position_hole() {
-        translate([-overall_spring_diam/2,overall_spring_diam/2,0]) {
-          children();
-        }
-      }
-
-      module body() {
-        intersection() {
-          position_hole() {
-            intersection() {
-              hull() {
-                accurate_circle(overall_spring_diam,resolution);
-                translate([-overall_spring_diam/2,0,0]) {
-                  square([overall_spring_diam,overall_spring_diam],center=true);
-                }
-              }
-              translate([0,-overall_spring_diam/2,0]) {
-                square([overall_spring_diam*3,overall_spring_diam],center=true);
-              }
-            }
-          }
-        }
-        position_hole() {
-          hull() {
-            translate([overall_spring_diam/2-spring_wall_thickness/2,0,0]) {
-              square([spring_wall_thickness,0.1],center=true);
-
-              translate([0,-overall_spring_diam/2+rpi_detent_from_top-rpi_detent_diam*0.6-spring_wall_thickness/2,0]) {
-                accurate_circle(spring_wall_thickness,resolution);
-              }
-            }
-          }
-        }
-      }
-
-      module holes() {
-        position_hole() {
-          accurate_circle(spring_center_diam,resolution);
-        }
-      }
-
-      difference() {
-        body();
-        holes();
-      }
-    }
-
-    module body() {
-      rounded_square(width,depth,rounded_diam,resolution);
-    }
-
-    module bridges() {
-      for(x=[left,right]) {
-        mirror([x-1,0,0]) {
-          translate([width/2,-depth/2,0]) {
-            spring_profile();
-          }
-        }
-      }
-    }
-
-    module holes() {
-      for(x=[left,right]) {
-        mirror([x-1,0,0]) {
-          translate([width/2,-depth/2,0]) {
-            hull() {
-              rounded_square(2*(rpi_detent_diam+wall_thickness),2*(rpi_detent_from_top-rpi_detent_diam/2),rounded_diam,resolution);
-              translate([0,rpi_detent_from_top,0]) {
-                rpi_detent_profile(0.3);
-              }
-              translate([-overall_spring_diam/2,overall_spring_diam/2,0]) {
-                accurate_circle(spring_center_diam,resolution);
-              }
-            }
-          }
-        }
-      }
-      /*
-      for(x=[left,right]) {
-        translate([x*width/2,-depth/2,0]) {
-          translate([0,rpi_detent_from_top,0]) {
-            rpi_detent_profile(0.3);
-          }
-
-          translate([-x*rounded_diam/2,rounded_diam/2,0]) {
-            hull() {
-              accurate_circle(rpi_detent_diam,resolution);
-
-              translate([0,rpi_detent_diam-wall_thickness*2,0]) {
-                accurate_circle(rpi_detent_diam,resolution);
-              }
-            }
-          }
-        }
-
-        translate([0,0,0]) {
-        }
-      }
-      */
-    }
-
-    difference() {
-      body();
-      holes();
-    }
-    bridges();
   }
 
   module holes() {
@@ -746,4 +701,3 @@ module assembly() {
 }
 
 assembly();
-//angle_aluminum_mount_base();

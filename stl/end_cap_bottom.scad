@@ -1,3 +1,3 @@
-use <../things/psu_mount.scad>;
+use <../things/main.scad>;
 
 bottom_end_cap();
