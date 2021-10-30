@@ -51,7 +51,7 @@ class Alarm {
   }
 
   updateOffset(offset_raw) {
-    const offset = util.round(offset_raw,3);
+    const offset = util.round(offset_raw,5);
     const {
       from,
       to,

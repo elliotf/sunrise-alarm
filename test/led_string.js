@@ -114,43 +114,14 @@ describe('LedString', function() {
     });
   });
 
-  describe('.interpolate', function() {
-    it('should return a number some proportion between two numbers', async function() {
-      const expected = [
-        {
-          input: [0,255,0.5],
-          output: 128,
-        },
-        {
-          input: [0,255,0.1],
-          output: 26,
-        },
-        {
-          input: [0,12,0.1],
-          output: 1,
-        },
-        {
-          input: [0,15,0.1],
-          output: 2,
-        },
-      ];
-
-      const actual = expected.map(({ input }) => {
-        return {
-          input,
-          output: LedString.interpolate.apply(null, input),
-        };
-      });
-
-      expect(actual).to.deep.equal(expected);
-    });
-  });
-
   describe('#fill', function() {
     let from;
     let to;
 
     beforeEach(async function() {
+      options.width = 1;
+
+      inst = new LedString(options);
       from = [[0,0,255],[0,0,128],[0,0,64]];
       to = [[255,255,0],[128,128,0],[64,64,0]];
     });
@@ -161,10 +132,7 @@ describe('LedString', function() {
       expect(inst.displayForTest()).to.deep.equal([
         "128 128 128",
         "64  64  64 ",
-        "32  32  32 ",
-        "32  32  32 ",
-        "64  64  64 ",
-        "128 128 128",
+        "33  33  33 ",
       ]);
 
       inst.fill(from,to,0.1);
@@ -172,11 +140,126 @@ describe('LedString', function() {
       expect(inst.displayForTest()).to.deep.equal([
         "26  26  230",
         "13  13  115",
-        "6   6   58 ",
-        "6   6   58 ",
-        "13  13  115",
-        "26  26  230",
+        "8   8   59 ",
       ]);
+    });
+
+    context('when there are multiple columns of LEDs', function() {
+      beforeEach(async function() {
+        from = [[0,0,0]];
+        to = undefined;
+        options.width = 4;
+        options.height = 1;
+        inst = new LedString(options);
+      });
+
+      it('should fill one column at a time with brightness', async function() {
+        const expected = [
+          {
+            input: [from, [[64,64,64]],1],
+            result: [
+              "255 255 255",
+              "0   0   0  ",
+              "0   0   0  ",
+              "0   0   0  ",
+            ],
+          },
+          {
+            input: [from, [[127.5,127.5,127.5]],1],
+            result: [
+              "255 255 255",
+              "255 255 255",
+              "0   0   0  ",
+              "0   0   0  ",
+            ],
+          },
+          {
+            input: [from, [[191,191,191]],1],
+            result: [
+              "255 255 255",
+              "255 255 255",
+              "255 255 255",
+              "0   0   0  ",
+            ],
+          },
+          {
+            input: [from, [[255,255,255]],1],
+            result: [
+              "255 255 255",
+              "255 255 255",
+              "255 255 255",
+              "255 255 255",
+            ],
+          },
+        ];
+
+        const actual = expected.map(({input}) => {
+          return {
+            input,
+            result: function() {
+              inst.fill(...input);
+              return inst.displayForTest();
+            }(),
+          };
+        });
+
+        expect(actual).to.deep.equal(expected);
+
+        /*
+
+        expect(inst.displayForTest()).to.deep.equal([
+        ]);
+
+        inst.fill(from,[[128,0,0]],1);
+
+        expect(inst.displayForTest()).to.deep.equal([
+        ]);
+
+        inst.fill(from,[[192,0,0]],1);
+
+        expect(inst.displayForTest()).to.deep.equal([
+          "255 255 255",
+          "255 255 255",
+          "255 255 255",
+          "0   0   0  ",
+        ]);
+
+        inst.fill(from,[[255,0,0]],1);
+
+        expect(inst.displayForTest()).to.deep.equal([
+          "255 255 255",
+          "255 255 255",
+          "255 255 255",
+          "255 255 255",
+        ]);
+        */
+      });
+    });
+  });
+
+  describe('.valueForColumn', function() {
+    it('should return a proportional value of the column in the width', async function() {
+      const expected = [
+        { width: 1, col: 0, raw_val: 128, result: 128 },
+        { width: 2, col: 0, raw_val: 128, result: 255 },
+        { width: 3, col: 0, raw_val: 32, result: 97 },
+        { width: 4, col: 0, raw_val: 64, result: 255 },
+        { width: 4, col: 1, raw_val: 95.5, result: 128 },
+        { width: 4, col: 2, raw_val: 127, result: 0 },
+        { width: 4, col: 3, raw_val: 191, result: 0 },
+        { width: 4, col: 3, raw_val: 255, result: 255 },
+      ];
+
+      const actual = expected.map(({ width, col, raw_val }) => {
+        return {
+          width,
+          col,
+          raw_val,
+          result: LedString.valueForColumn(width, col, raw_val),
+        };
+      });
+
+      expect(actual).to.deep.equal(expected);
     });
   });
 });

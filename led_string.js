@@ -1,3 +1,5 @@
+const util = require('./util');
+
 class LedString {
   constructor(opts) {
     const {
@@ -70,8 +72,17 @@ class LedString {
     })
   }
 
-  static interpolate(from, to, pct) {
-    return Math.round(from + (to - from)*pct);
+  static valueForColumn(width, col, raw_val) {
+    const max = 255;
+    const per_col = max/width;
+    const cols = util.round(raw_val / per_col, 2);
+    const over = Math.max(util.round((cols - col) * max, 0), 0);
+
+    if (Math.floor(cols) > col) {
+      return 255;
+    }
+
+    return over;
   }
 
   fill(from, to, pct) {
@@ -85,7 +96,8 @@ class LedString {
       for (let x = 0; x < this.width; ++x) {
         const pixel = this.getPixelAtCoord({x,y});
         channels.forEach((ch) => {
-          pixel.color[ch] = Math.round(from[y][ch] + delta[ch]*pct);
+          const value = LedString.valueForColumn(this.width, x, from[y][ch] + delta[ch]*pct);
+          pixel.color[ch] = value;
         });
       }
     }

@@ -21,7 +21,7 @@
 
   const num_pixels = 160; // 5M @ 32 pixels/M
   //const num_pixels = 40; // for testing
-  const width = 8;
+  const width = 4;
   const height = Math.floor(num_pixels/width);
 
 	const minute_in_ms = 60*1000;
@@ -91,8 +91,8 @@
     text-align: center;
     vertical-align: middle;
     display: table-cell;
-    height: 64px;
-    width: 64px;
+    height: 20px;
+    width: 20px;
     color: white;
     /* padding: 1px; */
     border: 0px;
