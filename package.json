@@ -6,7 +6,7 @@
     "build": "DISABLE_LOGGING=1 rollup -c",
     "dev": "DISABLE_LOGGING=1 rollup -c -w",
     "start": "sirv public --no-clear",
-    "test": "TZ='America/Chicago' DISABLE_LOGGING=1 NODE_CONFIG_ENV=test jest --rootDir=./test/ --runInBand",
+    "test": "TZ='America/Chicago' DISABLE_LOGGING=1 NODE_CONFIG_ENV=test jest --runInBand",
     "test:watch": "nodemon -e js,json,yaml --exec bash -c 'time npm test; date' ."
   },
   "devDependencies": {

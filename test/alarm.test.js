@@ -1,6 +1,6 @@
 require('./helper');
 
-const { expect, sinon } = require('./helper');
+const { sinon } = require('./helper');
 const Alarm = require('../alarm');
 const minute_in_ms = 60*1000;
 const hour_in_ms = 60*minute_in_ms;
@@ -46,7 +46,7 @@ describe('Alarm', function() {
 
         expect(function() {
           new Alarm(opts);
-        }).to.throw('Alarm schedule does not match the number of days in the week');
+        }).toThrow('Alarm schedule does not match the number of days in the week');
       });
     });
   });
@@ -95,7 +95,7 @@ describe('Alarm', function() {
         };
       });
 
-      expect(actual).to.deep.equal(expected);
+      expect(actual).toEqual(expected);
     });
 
     context('when the date passed in is a day of the week that has no alarm set', function() {
@@ -138,21 +138,21 @@ describe('Alarm', function() {
           };
         });
 
-        expect(actual).to.deep.equal(expected);
+        expect(actual).toEqual(expected);
       });
     });
   });
 
   describe('#updateOffset', function() {
     it('should fill the alarms LEDs with a gradient', async function() {
-      sinon.spy(inst.leds, 'fill');
+      jest.spyOn(inst.leds, 'fill');
 
       inst.updateOffset(-1);
       inst.updateOffset(-0.99);
       inst.updateOffset(0);
       inst.updateOffset(1);
 
-      expect(inst.leds.fill.args).to.deep.equal([
+      expect(inst.leds.fill.mock.calls).toEqual([
         [[[0,0,0],[0,0,0],[0,0,0]],[[255,0,0],[127,0,0],[0,0,0]],0],
         [[[0,0,0],[0,0,0],[0,0,0]],[[255,0,0],[127,0,0],[0,0,0]],0.02],
         [[[255,128,0],[255,64,0],[255,0,0]],[[255,255,255],[255,255,255],[255,255,255]],1],
@@ -169,12 +169,12 @@ describe('Alarm', function() {
     });
 
     it('should delegate to #determineOffset and #updateOffset', async function() {
-      sinon.spy(inst, 'updateOffset');
+      jest.spyOn(inst, 'updateOffset');
 
       inst.updateNow(new Date('2006-01-02T00:00:00'));
       inst.updateNow(new Date('2006-01-02T06:00:00'));
 
-      expect(inst.updateOffset.args).to.deep.equal([
+      expect(inst.updateOffset.mock.calls).toEqual([
         [-18],
         [0],
       ]);
@@ -196,15 +196,15 @@ describe('Alarm', function() {
         });
 
         it('should use the reactivate time to determine the offset', async function() {
-          sinon.spy(inst, 'determineOffset');
+          jest.spyOn(inst, 'determineOffset');
 
           inst.updateNow(now);
 
-          expect(inst.determineOffset.args).to.deep.equal([
+          expect(inst.determineOffset.mock.calls).toEqual([
             [resume_at],
           ]);
 
-          expect(inst._resume_at).to.deep.equal(resume_at);
+          expect(inst._resume_at).toEqual(resume_at);
         });
       });
 
@@ -215,11 +215,11 @@ describe('Alarm', function() {
         });
 
         it('should use now to determine the offset', async function() {
-          sinon.spy(inst, 'determineOffset');
+          jest.spyOn(inst, 'determineOffset');
 
           inst.updateNow(now);
 
-          expect(inst.determineOffset.args).to.deep.equal([
+          expect(inst.determineOffset.mock.calls).toEqual([
             [now],
           ]);
         });
@@ -227,7 +227,7 @@ describe('Alarm', function() {
         it('should clear the reactivation time', async function() {
           inst.updateNow(now);
 
-          expect(inst._resume_at).to.deep.equal(null);
+          expect(inst._resume_at).toEqual(null);
         });
       });
     });
@@ -237,15 +237,15 @@ describe('Alarm', function() {
     it('record the time that it should reactivate', async function() {
       inst.resumeAt(new Date('2010-01-01T00:00:00.000Z'));
 
-      expect(inst._resume_at).to.deep.equal(new Date('2010-01-01T00:00:00.000Z'));
+      expect(inst._resume_at).toEqual(new Date('2010-01-01T00:00:00.000Z'));
     });
 
     it('should return whatever the current state is', async function() {
-      expect(inst.resumeAt()).to.deep.equal(null);
-      expect(inst.resumeAt(undefined)).to.deep.equal(null);
-      expect(inst.resumeAt(0)).to.deep.equal(0);
-      expect(inst.resumeAt()).to.deep.equal(0);
-      expect(inst.resumeAt(undefined)).to.deep.equal(0);
+      expect(inst.resumeAt()).toEqual(null);
+      expect(inst.resumeAt(undefined)).toEqual(null);
+      expect(inst.resumeAt(0)).toEqual(0);
+      expect(inst.resumeAt()).toEqual(0);
+      expect(inst.resumeAt(undefined)).toEqual(0);
     });
   });
 
@@ -260,7 +260,7 @@ describe('Alarm', function() {
       const clock = sinon.useFakeTimers(now);
       inst.dismiss();
 
-      expect(inst._resume_at).to.deep.equal(new Date('2021-01-01T06:10:00'));
+      expect(inst._resume_at).toEqual(new Date('2021-01-01T06:10:00'));
     });
 
     context('when it is before the alarm', function() {
@@ -272,7 +272,7 @@ describe('Alarm', function() {
         const clock = sinon.useFakeTimers(now);
         inst.dismiss();
 
-        expect(inst._resume_at).to.deep.equal(null);
+        expect(inst._resume_at).toEqual(null);
       });
     });
 
@@ -285,7 +285,7 @@ describe('Alarm', function() {
         const clock = sinon.useFakeTimers(now);
         inst.dismiss();
 
-        expect(inst._resume_at).to.deep.equal(null);
+        expect(inst._resume_at).toEqual(null);
       });
     });
   });
@@ -330,7 +330,7 @@ describe('Alarm', function() {
         };
       });
 
-      expect(actual).to.deep.equal(expected);
+      expect(actual).toEqual(expected);
     });
   });
 });
