@@ -1,10 +1,11 @@
 const chai = require('chai');
 const sinon = require('sinon');
 
+global.context = describe;
+
+exports.sinon = sinon.createSandbox();
+exports.expect = chai.expect;
+
 beforeEach(async function() {
-  if (this.sinon) {
-    this.sinon.restore();
-  } else {
-    this.sinon = sinon.createSandbox();
-  }
+  exports.sinon.restore();
 });

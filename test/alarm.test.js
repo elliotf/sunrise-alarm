@@ -1,6 +1,6 @@
 require('./helper');
 
-const expect = require('chai').expect;
+const { expect, sinon } = require('./helper');
 const Alarm = require('../alarm');
 const minute_in_ms = 60*1000;
 const hour_in_ms = 60*minute_in_ms;
@@ -145,7 +145,7 @@ describe('Alarm', function() {
 
   describe('#updateOffset', function() {
     it('should fill the alarms LEDs with a gradient', async function() {
-      this.sinon.spy(inst.leds, 'fill');
+      sinon.spy(inst.leds, 'fill');
 
       inst.updateOffset(-1);
       inst.updateOffset(-0.99);
@@ -169,7 +169,7 @@ describe('Alarm', function() {
     });
 
     it('should delegate to #determineOffset and #updateOffset', async function() {
-      this.sinon.spy(inst, 'updateOffset');
+      sinon.spy(inst, 'updateOffset');
 
       inst.updateNow(new Date('2006-01-02T00:00:00'));
       inst.updateNow(new Date('2006-01-02T06:00:00'));
@@ -196,7 +196,7 @@ describe('Alarm', function() {
         });
 
         it('should use the reactivate time to determine the offset', async function() {
-          this.sinon.spy(inst, 'determineOffset');
+          sinon.spy(inst, 'determineOffset');
 
           inst.updateNow(now);
 
@@ -215,7 +215,7 @@ describe('Alarm', function() {
         });
 
         it('should use now to determine the offset', async function() {
-          this.sinon.spy(inst, 'determineOffset');
+          sinon.spy(inst, 'determineOffset');
 
           inst.updateNow(now);
 
@@ -257,7 +257,7 @@ describe('Alarm', function() {
     });
 
     it('should freeze the alarm until the end of the current alarm cycle', async function() {
-      const clock = this.sinon.useFakeTimers(now);
+      const clock = sinon.useFakeTimers(now);
       inst.dismiss();
 
       expect(inst._resume_at).to.deep.equal(new Date('2021-01-01T06:10:00'));
@@ -269,7 +269,7 @@ describe('Alarm', function() {
       });
 
       it('should leave the state alone', async function() {
-        const clock = this.sinon.useFakeTimers(now);
+        const clock = sinon.useFakeTimers(now);
         inst.dismiss();
 
         expect(inst._resume_at).to.deep.equal(null);
@@ -278,11 +278,11 @@ describe('Alarm', function() {
 
     context('on a day that does not have an alarm', function() {
       beforeEach(async function() {
-        this.sinon.stub(inst, 'getAlarmTimeForDate').returns(null);
+        sinon.stub(inst, 'getAlarmTimeForDate').returns(null);
       });
 
       it('should leave the state alone', async function() {
-        const clock = this.sinon.useFakeTimers(now);
+        const clock = sinon.useFakeTimers(now);
         inst.dismiss();
 
         expect(inst._resume_at).to.deep.equal(null);
