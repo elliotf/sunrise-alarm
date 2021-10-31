@@ -12,30 +12,35 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 */
 
-const pluralize = (word, count) => `${count} ${word}${count === 1 ? '' : 's'}`;
-
 class JestSimpleDotReporter {
     constructor(globalConfig, options) {
         this._globalConfig = globalConfig;
         this._options = options;
+        this._reset = '';
+        this._red = '';
+        this._green = '';
+        this._yellow = '';
+        if (this._options.color) {
+            this._reset = '\x1b[0m';
+            this._red = '\x1b[31m';
+            this._green = '\x1b[32m';
+            this._yellow = '\x1b[33m';
+        }
     }
 
     onRunStart(test) {
         this._numTestSuitesLeft = test.numTotalTestSuites;
-
-        console.log()
-        console.log(`Found ${test.numTotalTestSuites} test suites`);
     }
 
     onRunComplete(test, results) {
         const {
             numFailedTests,
             numPassedTests,
-            numTodoTests,
             numPendingTests,
             testResults,
             numTotalTests,
-            startTime
+            numTotalTestSuites,
+            startTime,
         } = results;
 
         console.log();
@@ -45,19 +50,19 @@ class JestSimpleDotReporter {
             }
         });
 
+
         if (!results.snapshot.didUpdate && results.snapshot.unchecked) {
-            const obsoleteError = pluralize('obsolete snapshot', results.snapshot.unchecked) + ' found.';
-            if (this._options.color)
-                console.error(`\x1b[31m${obsoleteError}\x1b[0m`);
-            else
-                console.error(obsoleteError);
+            console.error(`${this._red}obsolete snapshot(s) found.${this._reset}`);
         }
 
-        console.log(`Ran ${numTotalTests} tests in ${testDuration()}`);
-        process.stdout.write(` ${numPassedTests || 0} passing`);
-        process.stdout.write(` ${numFailedTests || 0} failing`);
-        process.stdout.write(` ${(numTodoTests || 0) + (numPendingTests || 0)} skipped`);
-        console.log();
+        console.log(`Ran ${numTotalTests} tests from ${numTotalTestSuites} files in ${testDuration()}`);
+        console.log(`${this._green}${numPassedTests || 0} passing${this._reset}`);
+        if (numFailedTests) {
+            console.log(`${this._red}${numFailedTests} failing${this._reset}`);
+        }
+        if (numPendingTests) {
+            console.log(`${this._yellow}${numPendingTests} pending${this._reset}`);
+        }
 
         function testDuration() {
             const end = new Date();
@@ -69,24 +74,23 @@ class JestSimpleDotReporter {
     }
 
     onTestResult(test, testResult) {
-            for (var i = 0; i < testResult.testResults.length; i++) {
-                switch (testResult.testResults[i].status) {
-                    case "passed":
-                        process.stdout.write(".")
-                        break
-                    case "skipped":
-                    case "pending":
-                    case "todo":
-                    case "disabled":
-                        process.stdout.write("*")
-                        break
-                    case "failed":
-                        process.stdout.write("F")
-                        break
-                    default:
-                        process.stdout.write(`(${testResult.testResults[i].status})`)
-                }
-            }
+        process.stdout.write(' ');
+        const marks = {
+          passed: '.',
+          pending: '-',
+        };
+        const colors = {
+          passed: this._green,
+          pending: this._yellow,
+        };
+
+        const fail_mark = 'X';
+        const fail_color = this._red;
+        for (var i = 0; i < testResult.testResults.length; i++) {
+            const mark = marks[testResult.testResults[i].status] || fail_mark;
+            const color = colors[testResult.testResults[i].status] || fail_color;
+            process.stdout.write(`${color}${mark}${this._reset}`);
+        }
 
         if (!--this._numTestSuitesLeft && this._globalConfig.collectCoverage) {
             console.log()
