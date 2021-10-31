@@ -68,7 +68,7 @@ describe('Alarm', function() {
         },
         {
           input: '2021-09-24T05:59:50',
-          output: -0.01,
+          output: -0.00833,
         },
         {
           input: '2021-09-24T06:00:00',
@@ -76,7 +76,7 @@ describe('Alarm', function() {
         },
         {
           input: '2021-09-24T06:09:50',
-          output: 0.98,
+          output: 0.98333,
         },
         {
           input: '2021-09-24T06:10:00',

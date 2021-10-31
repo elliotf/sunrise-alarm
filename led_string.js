@@ -1,4 +1,13 @@
 const util = require('./util');
+const log = require('./lib/log')(__filename);
+
+function gammaCorrect(val) {
+  // darken low values
+  const correction = 2;
+  const corrected = Math.pow((val / 255), correction) * 255;
+
+  return corrected;
+}
 
 class LedString {
   constructor(opts) {
@@ -20,6 +29,14 @@ class LedString {
           color: [0,0,0],
         };
       });
+
+    // FIXME: untested, done to avoid blowing up under test
+    if (process.env.NODE_ENV === 'production') {
+      const LedController = require('ws2801-pi').default;
+      this.led_controller = new LedController(width*height);
+    } else {
+      log.warn({ NODE_ENV: process.env.NODE_ENV }, "Node env is not `production`, not enabling WS2801 display");
+    }
   }
 
   getPixelAtCoord({x,y}) {
@@ -85,7 +102,7 @@ class LedString {
     return over;
   }
 
-  fill(from, to, pct) {
+  async fill(from, to, pct) {
     const channels = [0,1,2]; // R G B indexes into color array
 
     for (let y = 0; y < this.height && y < this.height; ++y) {
@@ -99,7 +116,25 @@ class LedString {
           const value = LedString.valueForColumn(this.width, x, from[y][ch] + delta[ch]*pct);
           pixel.color[ch] = value;
         });
+
+        const color = {
+          red: Math.round(gammaCorrect(pixel.color[0])),
+          green: Math.round(gammaCorrect(pixel.color[2])),
+          blue: Math.round(gammaCorrect(pixel.color[1])),
+        };
+
+        if (0 == y && 0 == x) {
+          // console.log('color.red', color.red);
+        }
+
+        if (this.led_controller) {
+          await this.led_controller.setLed(pixel.offset, color);
+        }
       }
+    }
+
+    if (this.led_controller) {
+      await this.led_controller.show();
     }
   }
 }

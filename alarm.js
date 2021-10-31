@@ -7,6 +7,8 @@ const minute_in_ms = 60*1000;
 const hour_in_ms = 60*minute_in_ms;
 const day_in_ms = 24*hour_in_ms;
 
+const ROUND_PLACES = 5;
+
 class Alarm {
   constructor(opts) {
     const attrs = [
@@ -47,29 +49,30 @@ class Alarm {
     const ms_into_day = t % day_in_ms - offset*minute_in_ms;
     const delta = ms_into_day - alarm_time_ms;
     const comparator = (delta <= 0) ? this.warm_up_time_ms : this.cool_down_time_ms;
-    return util.round(delta / comparator,2);
+    return util.round(delta / comparator, ROUND_PLACES);
   }
 
-  updateOffset(offset_raw) {
-    const offset = util.round(offset_raw,5);
+  async updateOffset(offset_raw) {
+    const offset = util.round(offset_raw, ROUND_PLACES);
     const {
       from,
       to,
+
       pct,
     } = this.key_frames.at(offset);
 
-    this.leds.fill(from,to,pct);
+    await this.leds.fill(from,to,pct);
   }
 
-  updateNow(d) {
+  async updateNow(d) {
     if (this._resume_at > d) {
-      this.updateOffset(this.determineOffset(this._resume_at));
+      await this.updateOffset(this.determineOffset(this._resume_at));
       return;
     } else {
       this.resumeAt(null);
     }
     const offset = this.determineOffset(d);
-    this.updateOffset(offset);
+    await this.updateOffset(offset);
   }
 
   // disable the alarm until after a given time, for snooze/dismiss/disable

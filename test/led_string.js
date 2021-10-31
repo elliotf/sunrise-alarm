@@ -204,35 +204,6 @@ describe('LedString', function() {
         });
 
         expect(actual).to.deep.equal(expected);
-
-        /*
-
-        expect(inst.displayForTest()).to.deep.equal([
-        ]);
-
-        inst.fill(from,[[128,0,0]],1);
-
-        expect(inst.displayForTest()).to.deep.equal([
-        ]);
-
-        inst.fill(from,[[192,0,0]],1);
-
-        expect(inst.displayForTest()).to.deep.equal([
-          "255 255 255",
-          "255 255 255",
-          "255 255 255",
-          "0   0   0  ",
-        ]);
-
-        inst.fill(from,[[255,0,0]],1);
-
-        expect(inst.displayForTest()).to.deep.equal([
-          "255 255 255",
-          "255 255 255",
-          "255 255 255",
-          "255 255 255",
-        ]);
-        */
       });
     });
   });

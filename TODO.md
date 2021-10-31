@@ -1,32 +1,41 @@
 # todo
 
 * todo
-  * hardware
-    * find a ws2801 library or make one using https://github.com/fivdi/spi-device
-      * akin to https://github.com/Jorgen-VikingGod/node-rpi-ws2801
-    * test out LED strip to make sure it's not busted
-    * LED strip's (odd?) wiring colors
-      * SPI
-        * BLUE: GND
-        * RED: SI (GPIO 10, PIN 19)
-        * GREEN: CLK (GPIO 11, PIN 23)
-        * BLACK: 5V
-      * power
-        * RED: 5V
-        * BLACK: GND
+  * smoother gradients
+    * try out multi-column lighting
+      * gang columns together, so that N light up together?
+        * now `const value = LedString.valueForColumn(this.width, x, from[y][ch] + delta[ch]*pct);`
+        * maybe `const value = LedString.valueForColumn(this.width, x % num_columns, from[y][ch] + delta[ch]*pct);`
   * dismiss/on/off button
     * toggle between on/off
     * setting that state for N minutes?
-  * gamma correction
+    * added three buttons, could do on/off toggle and brighter/dimmer, etc.
+    * add a light sensor?
+      * how to avoid self pollution?
+  * better fitting cherry MX sockets
+    * don't latch correctly
+    * a little too tall
+    * fixes
+      * don't recess the buttons, for more accurate thickness?
+      * angle the contact edge for more support
+        * surface farthest from the key switch is the bridge that is susceptible to sag
+        * supports the angled surface that interfaces with the key retainer clip
   * web UI
     * adjust schedule
     * YAGNI: adjust animations
-  * multiple events per day?
+  * multiple events per day
+    * alarm has a "current alarm"
+      * this would let us get rid of "disabled until" for snoozing purposes
+      * otherwise asks scheduler if there is an alarm to process
+    * scheduler
+      * normalized view of alarms is stored on-disk as json
+      * hydrates into denormalized view?
+    * have a sunset animation as well as sunrise
   * away mode?
     * random times?
   * production-ize
     * caddy?
-    * expose via Oauth gateway?
+    * expose via oauth gateway?
   * assertions on animation/gradient config
     * avoid duplicate indices in schedule and gradients
 * eventually, maybe, but probably not
@@ -56,6 +65,21 @@
     * every N milliseconds/seconds
       * `setInterval(() => { Alarm#updateNow(new Date); }, 1000);`
       * which will get interpolated
+  * hardware
+    * test out LED strip to make sure it's not busted
+  * gamma correction
+  * hardware
+    * find a ws2801 library or make one using https://github.com/fivdi/spi-device
+      * akin to https://github.com/Jorgen-VikingGod/node-rpi-ws2801
+    * LED strip's (odd?) wiring colors
+      * SPI
+        * BLUE: GND
+        * RED: SI (GPIO 10, PIN 19)
+        * GREEN: CLK (GPIO 11, PIN 23)
+        * BLACK: 5V
+      * power
+        * RED: 5V
+        * BLACK: GND
 * todistract
   * once the alarm is going off, flash the lights?
     * that sounds kind of unpleasant, but maybe a pulse?

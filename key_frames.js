@@ -40,7 +40,7 @@ class KeyFrames {
       // percentage between the two indices
       const dist = (to.index - from.index);
       const gone = (offset - from.index);
-      const pct = util.round(gone / dist, 3);
+      const pct = util.round(gone / dist, 8);
 
       if (offset >= from.index && offset <= to.index) {
         return {
