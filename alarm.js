@@ -1,3 +1,4 @@
+const config = require('./config');
 const LedString = require('./led_string');
 const KeyFrames = require('./key_frames');
 const util = require('./util');
@@ -36,6 +37,7 @@ class Alarm {
 
     this.key_frames = new KeyFrames({
       height: this.height,
+      animation: config.animations.sunrise,
     });
   }
 

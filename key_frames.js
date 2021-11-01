@@ -1,17 +1,16 @@
 const util = require('./util');
 const config = require('./config');
 
-const gradient_schedule = config.gradient_schedule;
-
 class KeyFrames {
   constructor(opts) {
     const {
       height,
+      animation,
     } = opts;
 
     this.height = height;
 
-    this.gradient_schedule = gradient_schedule.map(({ index, formula }) => {
+    this.gradient_schedule = animation.map(({ index, formula }) => {
       const gradient = this.gradientFrom(formula);
       return {
         index,

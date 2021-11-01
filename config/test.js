@@ -1,4 +1,5 @@
-exports.gradient_schedule = [
+exports.animations = {};
+exports.animations.sunrise = [
   // start black
   {
     index: -1,

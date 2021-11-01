@@ -2,6 +2,7 @@ require('./helper');
 
 const expect = require('chai').expect;
 const KeyFrames = require('../key_frames');
+const config = require('../config');
 
 describe('KeyFrames', function() {
   let inst;
@@ -10,6 +11,7 @@ describe('KeyFrames', function() {
   beforeEach(async function() {
     opts = {
       height: 3,
+      animation: config.animations.sunrise,
     };
 
     inst = new KeyFrames(opts);

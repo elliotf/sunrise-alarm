@@ -1,4 +1,7 @@
-exports.gradient_schedule = [
+exports.scheduler_state_path = '/var/run/alarm/state.json';
+
+exports.animations = {};
+exports.animations.sunrise = [
   // start black
   {
     index: -1,
