@@ -1,20 +1,20 @@
 require('./helper');
 
 const expect = require('chai').expect;
-const KeyFrames = require('../key_frames');
+const Animation = require('../animation');
 const config = require('../config');
 
-describe('KeyFrames', function() {
+describe('Animation', function() {
   let inst;
   let opts;
 
   beforeEach(async function() {
     opts = {
       height: 3,
-      animation: config.animations.sunrise,
+      key_frames: config.animations.sunrise,
     };
 
-    inst = new KeyFrames(opts);
+    inst = new Animation(opts);
   });
 
   describe('#at', function() {
@@ -167,7 +167,7 @@ describe('KeyFrames', function() {
     context('when more than one stop is provided', function() {
       it('should interpolate correctly', async function() {
         opts.height = 5;
-        const inst = new KeyFrames(opts);
+        const inst = new Animation(opts);
         expect(inst.gradientFrom([[0,255,0,0],[0.5,1,0,0],[1,3,0,0]])).to.deep.equal([
           [255,0,0],
           [128,0,0],
@@ -181,7 +181,7 @@ describe('KeyFrames', function() {
     context('when a stop is provided for each pixel in the Y', function() {
       beforeEach(async function() {
         opts.height = 2;
-        inst = new KeyFrames(opts);
+        inst = new Animation(opts);
       });
 
       it('should use those stops as the pixel values', async function() {
@@ -194,7 +194,7 @@ describe('KeyFrames', function() {
 
     context('when more stops are provided than there are pixels', function() {
       it('should throw', async function() {
-        inst = new KeyFrames(opts);
+        inst = new Animation(opts);
         expect(function() {
           inst.gradientFrom([[0,255,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]);
         }).to.throw('Cannot fit 4 deltas into 3 pixels');

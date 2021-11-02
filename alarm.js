@@ -1,6 +1,6 @@
 const config = require('./config');
 const LedString = require('./led_string');
-const KeyFrames = require('./key_frames');
+const Animation = require('./animation');
 const util = require('./util');
 const { DateTime } = require('luxon');
 
@@ -35,9 +35,9 @@ class Alarm {
       height: this.height,
     });
 
-    this.key_frames = new KeyFrames({
+    this.animation = new Animation({
       height: this.height,
-      animation: config.animations.sunrise,
+      key_frames: config.animations.sunrise,
     });
   }
 
@@ -61,7 +61,7 @@ class Alarm {
       to,
 
       pct,
-    } = this.key_frames.at(offset);
+    } = this.animation.at(offset);
 
     await this.leds.fill(from,to,pct);
   }

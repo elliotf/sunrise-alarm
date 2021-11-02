@@ -1,16 +1,15 @@
 const util = require('./util');
-const config = require('./config');
 
-class KeyFrames {
+class Animation {
   constructor(opts) {
     const {
       height,
-      animation,
+      key_frames,
     } = opts;
 
     this.height = height;
 
-    this.gradient_schedule = animation.map(({ index, formula }) => {
+    this.gradient_schedule = key_frames.map(({ index, formula }) => {
       const gradient = this.gradientFrom(formula);
       return {
         index,
@@ -88,4 +87,4 @@ class KeyFrames {
   }
 }
 
-module.exports = KeyFrames;
+module.exports = Animation;
