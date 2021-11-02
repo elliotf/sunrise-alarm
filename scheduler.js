@@ -1,5 +1,7 @@
+const crypto = require('crypto');
 const config = require('./config');
 const util = require('./util');
+const log = require('./lib/log')(__filename);
 
 class Scheduler {
   constructor(attrs) {
@@ -10,7 +12,16 @@ class Scheduler {
 
     this._fs = fs;
 
-    this._user_readable_state = alarms;
+    this.update(attrs);
+  }
+
+  update(attrs) {
+    const {
+      alarms,
+    } = attrs;
+    this._current_state = {
+      alarms,
+    };
     this._days = Array.apply(null, { length: 7 }).map(() => {
       return [];
     });
@@ -37,12 +48,31 @@ class Scheduler {
     });
   }
 
-  async persist() {
+  currentState() {
+    return JSON.parse(JSON.stringify(this._current_state));
+  }
+
+  async saveToDisk() {
     const path = config.scheduler_state_path;
     const data = {
       something: 'whatever',
     };
-    await this._fs.writeFile(path, JSON.stringify(this._user_readable_state));
+    const tmp_path = path + '-' + crypto.randomBytes(20).toString('hex');
+    // UNTESTED: avoid corrupting the file if we die halfway through or multiple process save at the same time
+    await this._fs.writeFile(tmp_path, JSON.stringify(this.currentState())); // first write to a temp file
+    await this._fs.rename(tmp_path, path); // then atomically rename
+  }
+
+  async loadFromDisk() {
+    const path = config.scheduler_state_path;
+    try {
+      const contents = await this._fs.readFile(path);
+      const {alarms} = JSON.parse(contents);
+      this.update({alarms});
+    } catch(err) {
+      // swallow errors so that we can start
+      log.error({ err: err, stack: err.stack }, `Could not load state from disk: ${err}`);
+    }
   }
 
   getForDate(date) {
