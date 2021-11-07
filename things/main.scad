@@ -21,6 +21,8 @@ keyswitch_hole_side = 14 + tolerance;
 keyswitch_retainer_ledge_thickness = 1.2;
 keycap_hole_side = 20 + rounded_diam;
 
+threaded_hole_depth = 8;
+
 sheet_metal_thickness = 1.5;
 
 led_strip_length = 1000;
@@ -148,33 +150,87 @@ module psu() {
 }
 
 
+al_mount_width = angle_aluminum_mount_screw_diam + 1/2*inch;
+al_mount_length = al_mount_width*2;
+al_max_height = angle_aluminum_from_board+al_mount_width*0.4;
 module angle_aluminum_mount() {
-  mount_width = angle_aluminum_mount_screw_diam + 1/2*inch;
-  mount_length = mount_width*2;
-  max_height = angle_aluminum_from_board+mount_width*0.4;
   rounded_diam = 5;
 
   module body() {
-    translate([0,0,max_height/2]) {
-      rounded_cube(mount_width,mount_length,max_height,rounded_diam,resolution);
+    translate([0,0,al_max_height/2]) {
+      rounded_cube(al_mount_width,al_mount_length,al_max_height,rounded_diam,resolution);
     }
   }
 
   module holes() {
-    hole(angle_aluminum_mount_screw_diam,max_height*3,resolution);
+    hole(angle_aluminum_mount_screw_diam,al_max_height*3,resolution);
     translate([0,0,angle_aluminum_from_board]) {
       max_side = 10*inch;
       rotate([90,0,0]) {
         rotate([0,0,45]) {
           translate([max_side/2,max_side/2,0]) {
-            rounded_cube(max_side,max_side,mount_length*2,rounded_diam);
+            rounded_cube(max_side,max_side,al_mount_length*2,rounded_diam);
           }
         }
-        translate([0,mount_width/2-rounded_diam/2*0.2,0]) {
-          rounded_cube(rounded_diam/2,mount_width,mount_length*2,rounded_diam/2);
+        translate([0,al_mount_width/2-rounded_diam/2*0.2,0]) {
+          rounded_cube(rounded_diam/2,al_mount_width,al_mount_length*2,rounded_diam/2);
         }
       }
     }
+  }
+
+  difference() {
+    body();
+    holes();
+  }
+}
+
+module angle_aluminum_mount_cap() {
+  rounded_diam = 5;
+  cap_height = al_max_height/2;
+
+  module body() {
+    translate([0,0,cap_height/2]) {
+      rounded_cube(al_mount_width,al_mount_length,cap_height,rounded_diam,resolution);
+    }
+  }
+
+  module holes() {
+    for(x=[left,right]) {
+      mirror([x-1,0,0]) {
+        translate([al_mount_width/2,0,0]) {
+          rotate([0,-45,0]) {
+            cube([al_mount_width,al_mount_length+1,al_mount_width*0.4],center=true);
+          }
+        }
+      }
+    }
+    translate([0,0,cap_height]) {
+      hole(screw_diam,cap_height*3,resolution/2);
+      hull() {
+        screw_head_diam = 8;
+        base_depth = 1.5;
+        delta = screw_head_diam - screw_diam;
+        hole(screw_head_diam,base_depth*2,resolution/2);
+        hole(screw_diam,2*(delta/2+1.5),resolution/2);
+      }
+    }
+    /*
+    hole(angle_aluminum_mount_screw_diam,cap_height*3,resolution);
+    translate([0,0,angle_aluminum_from_board]) {
+      max_side = 10*inch;
+      rotate([90,0,0]) {
+        rotate([0,0,45]) {
+          translate([max_side/2,max_side/2,0]) {
+            rounded_cube(max_side,max_side,al_mount_length*2,rounded_diam);
+          }
+        }
+        translate([0,al_mount_width/2-rounded_diam/2*0.2,0]) {
+          rounded_cube(rounded_diam/2,al_mount_width,al_mount_length*2,rounded_diam/2);
+        }
+      }
+    }
+    */
   }
 
   difference() {
@@ -220,8 +276,6 @@ module end_cap_base_profile() {
 }
 
 module end_cap_holes(side=top) {
-  threaded_hole_depth = 8;
-
   sunken_area_diam = end_cap_diam-2*(threaded_hole_depth+wall_thickness*2);
 
   // screw holes
@@ -533,6 +587,10 @@ module angle_aluminum_assembly() {
     }
     position_angle_aluminum_mounts() {
       angle_aluminum_mount();
+
+      translate([0,0,al_max_height*1.25]) {
+        angle_aluminum_mount_cap();
+      }
     }
   }
 }
@@ -555,6 +613,40 @@ module plywood_plank() {
         }
       }
     }
+  }
+
+  difference() {
+    body();
+    holes();
+  }
+}
+
+module rear_cover_brace() {
+  width = end_cap_diam;
+  depth = overall_rearside_depth;
+  height = screw_area_width;
+
+  module body() {
+    translate([0,depth/2,0]) {
+      rounded_cube(width,depth,height,rounded_diam,resolution);
+    }
+  }
+
+  module holes() {
+    translate([0,depth,0]) {
+      rounded_cube(width-2*(threaded_hole_depth+wall_thickness*2),2*(depth-screw_hole_body_length),height+1,rounded_diam,resolution);
+    }
+
+    for(x=[left,right]) {
+      translate([x*width*0.2,depth,0]) {
+        rotate([90,0,0]) {
+          hole(screw_diam,depth*3,resolution/2);
+        }
+      }
+
+      // hole(m3_threaded_insert_diam,threaded_hole_depth*2,resolution);
+    }
+
   }
 
   difference() {
@@ -687,6 +779,12 @@ module assembly() {
     translate([0,plywood_thickness/2,0]) {
       color("white", 0.9) {
         % plywood_plank();
+      }
+    }
+
+    for(z=[top,bottom]) {
+      translate([0,plywood_thickness,z*plywood_length*0.15]) {
+        // rear_cover_brace();
       }
     }
   }
