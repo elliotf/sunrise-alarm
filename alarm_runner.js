@@ -10,7 +10,7 @@ const day_in_ms = 24*hour_in_ms;
 
 const ROUND_PLACES = 5;
 
-class Alarm {
+class AlarmRunner {
   constructor(opts) {
     const attrs = [
       'width',
@@ -59,7 +59,6 @@ class Alarm {
     const {
       from,
       to,
-
       pct,
     } = this.animation.at(offset);
 
@@ -112,4 +111,4 @@ class Alarm {
   }
 }
 
-module.exports = Alarm;
+module.exports = AlarmRunner;

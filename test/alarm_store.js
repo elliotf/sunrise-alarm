@@ -1,10 +1,10 @@
 const { expect, sinon } = require('./helper');
 
-const Scheduler = require('../scheduler');
+const AlarmStore = require('../alarm_store');
 const util = require('../util');
 const memfs = require('memfs');
 
-describe('Scheduler', function() {
+describe('AlarmStore', function() {
   let vol;
   let instance;
   let schedule_data;
@@ -44,12 +44,12 @@ describe('Scheduler', function() {
       alarms: schedule_data.alarms,
     };
 
-    instance = new Scheduler(schedule_data);
+    instance = new AlarmStore(schedule_data);
   });
 
   describe('#update', function() {
     beforeEach(async function() {
-      instance = new Scheduler({
+      instance = new AlarmStore({
         alarms: [],
       });
     });
@@ -80,7 +80,7 @@ describe('Scheduler', function() {
         '/var/run/alarm/state.json': JSON.stringify(alarm_data),
       });
       schedule_data.alarms = [];
-      instance = new Scheduler(schedule_data);
+      instance = new AlarmStore(schedule_data);
     });
 
     it('should load state from disk', async function() {

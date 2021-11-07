@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const app = require('./app');
-const Alarm = require('./alarm');
+const Alarm = require('./alarm_runner');
 const log = require('./lib/log')(__filename);
 
 const { DateTime } = require('luxon');

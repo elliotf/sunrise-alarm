@@ -1,9 +1,9 @@
 const { expect, sinon } = require('./helper');
-const Alarm = require('../alarm');
+const AlarmRunner = require('../alarm_runner');
 const minute_in_ms = 60*1000;
 const hour_in_ms = 60*minute_in_ms;
 
-describe('Alarm', function() {
+describe('AlarmRunner', function() {
   let inst;
   let opts;
 
@@ -23,7 +23,7 @@ describe('Alarm', function() {
         null, // Saturday
       ],
     };
-    inst = new Alarm(opts);
+    inst = new AlarmRunner(opts);
   });
 
   describe('constructor', function() {
@@ -43,7 +43,7 @@ describe('Alarm', function() {
         ];
 
         expect(function() {
-          new Alarm(opts);
+          new AlarmRunner(opts);
         }).to.throw('Alarm schedule does not match the number of days in the week');
       });
     });

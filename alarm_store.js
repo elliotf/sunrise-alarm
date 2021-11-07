@@ -3,7 +3,7 @@ const config = require('./config');
 const util = require('./util');
 const log = require('./lib/log')(__filename);
 
-class Scheduler {
+class AlarmStore {
   constructor(attrs) {
     const {
       alarms,
@@ -53,7 +53,7 @@ class Scheduler {
   }
 
   async saveToDisk() {
-    const path = config.scheduler_state_path;
+    const path = config.state_path;
     const data = {
       something: 'whatever',
     };
@@ -64,7 +64,7 @@ class Scheduler {
   }
 
   async loadFromDisk() {
-    const path = config.scheduler_state_path;
+    const path = config.state_path;
     try {
       const contents = await this._fs.readFile(path);
       const {alarms} = JSON.parse(contents);
@@ -98,4 +98,4 @@ class Scheduler {
   }
 }
 
-module.exports = Scheduler;
+module.exports = AlarmStore;

@@ -1,5 +1,23 @@
 # todo
 
+* redesign/organization
+  * alarm runner
+    * takes in
+      * scheduler
+      * led_string
+        * or display?
+        * or a render function that takes a display?
+  * alarm store
+    * takes in
+      * fs
+  * animator
+    * stores keyframes for animations by name
+      * sunrise
+      * sunset
+      * on
+      * off
+      * etc
+
 * todo
   * smoother gradients
     * try out multi-column lighting
