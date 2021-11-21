@@ -1,46 +1,15 @@
 #!/usr/bin/env node
 
-const fs = require('fs').promises;
 const { DateTime } = require('luxon');
 
-const app = require('./app');
-const Runner = require('./runner');
-const Store = require('./store');
 const util = require('./util');
-const LedString = require('./led_string');
 const log = require('./lib/log')(__filename);
 
-const num_pixels = 32*4; // 32pixels/M, 4M
-const width = 4;
-const height = Math.floor(num_pixels/width);
-
-const store = new Store({
-  fs,
-  height,
-  alarms: [
-    {
-      hour: 7,
-      minute: 30,
-      days: [ true,false,false,false,false,false,true ],
-    },
-    {
-      hour: 6,
-      days: [ false,true,true,true,true,true,false ],
-    },
-  ],
-});
-
-const display = new LedString({
-  width,
-  height,
-  bottom_start: false,
-});
-
-const runner = new Runner({
-  width,
-  height,
-  store,
-});
+const {
+  app,
+  runner,
+  display,
+} = require('./app');
 
 const listen_port = 3000;
 app.listen(listen_port, function(err) {

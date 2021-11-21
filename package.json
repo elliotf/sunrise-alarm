@@ -26,12 +26,14 @@
     "svelte": "^3.0.0"
   },
   "dependencies": {
+    "body-parser": "^1.19.0",
     "chai": "^4.3.4",
     "express": "^4.17.1",
     "luxon": "^2.0.2",
     "pino": "^6.13.3",
     "pino-pretty": "^7.0.1",
     "sirv-cli": "^1.0.0",
+    "supertest": "^6.1.6",
     "ws2801-pi": "^1.2.0"
   }
 }
