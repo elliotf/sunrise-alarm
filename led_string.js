@@ -102,6 +102,15 @@ class LedString {
   }
 
   async fill(colors) {
+    const per_pixel = 1/this.width;
+    const channels = [0,1,2]; // RGB indexes
+
+    // a form of dithering, to make light changes more gradual
+    function selectiveRound(x, val) {
+      // untested
+      return ((val % 1) > x*per_pixel) ? Math.ceil(val) : Math.floor(val);
+    }
+
     for (let y = 0; y < this.height && y < this.height; ++y) {
       const rgb = colors[y];
 
@@ -110,9 +119,9 @@ class LedString {
         pixel.color = rgb;
 
         const color = {
-          red: Math.round(gammaCorrect(rgb[0])),
-          green: Math.round(gammaCorrect(rgb[2])*0.9),
-          blue: Math.round(gammaCorrect(rgb[1])),
+          red: selectiveRound(x, gammaCorrect(rgb[0])),
+          green: selectiveRound(x, gammaCorrect(rgb[2])*0.9),
+          blue: selectiveRound(x, gammaCorrect(rgb[1])),
         };
 
         if (this.led_controller) {

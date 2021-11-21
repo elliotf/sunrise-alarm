@@ -69,7 +69,7 @@ function start() {
     const increment_by_ms = 50;
     const rate = increment_by_ms / update_interval_ms;
     const start = new Date('2021-01-01T05:40:00.000-06:00');
-    log.info(`Running in debug at ${rate}x speed, starting fake lock at ${start.getHours()}:${start.getMinutes()}`);
+    log.info(`Running in debug at ${rate}x speed, starting fake lock at ${start.getHours()}:${start.getMinutes()} on a Friday`);
 
     const start_ms = start.valueOf();
     let i = 0;
