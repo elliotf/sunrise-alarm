@@ -1,76 +1,81 @@
 const { expect, sinon } = require('./helper');
 
-const AlarmStore = require('../alarm_store');
+const Store = require('../store');
+const Alarm = require('../alarm');
 const util = require('../util');
 const memfs = require('memfs');
 
-describe('AlarmStore', function() {
+describe('Store', function() {
   let vol;
   let instance;
-  let schedule_data;
+  let attrs;
   let alarm_data;
 
   beforeEach(async function() {
     vol = memfs.Volume.fromJSON({});
 
-    schedule_data = {
+    attrs = {
       alarms: [
         {
-          time: 8*util.HOUR_IN_MS,
+          hour: 8,
           days: [ true,false,false,false,false,false,true ],
-          animation: 'sunrise',
-          warmup: 20,
-          cooldown: 30,
         },
         {
-          time: 6*util.HOUR_IN_MS,
+          hour: 6,
           days: [ false,true,true,true,true,true,false ],
-          animation: 'sunrise',
-          warmup: 20,
-          cooldown: 30,
         },
         {
-          time: 6*util.HOUR_IN_MS+10*util.MINUTE_IN_MS,
+          hour: 8,
           days: [ false,true,true,true,true,true,false ],
-          animation: 'sunrise',
-          warmup: 20,
-          cooldown: 30,
         },
       ],
       fs: vol.promisesApi,
+      height: 6,
     };
 
     alarm_data = {
-      alarms: schedule_data.alarms,
+      alarms: attrs.alarms,
     };
 
-    instance = new AlarmStore(schedule_data);
+    instance = new Store(attrs);
+  });
+
+  describe('constructor', function() {
+    context('when alarms are not provided', function() {
+      beforeEach(async function() {
+        delete attrs.alarms;
+      });
+
+      it('should default to no alarms with no error', async function() {
+        instance = new Store(attrs);
+      });
+    });
   });
 
   describe('#update', function() {
     beforeEach(async function() {
-      instance = new AlarmStore({
+      const without_alarms = {
+        ...attrs,
         alarms: [],
-      });
+      };
+      instance = new Store(without_alarms);
     });
 
     it('should populate alarms', async function() {
-      instance.update(schedule_data);
+      instance.update(attrs);
 
       expect(instance.currentState()).to.deep.equal({
-        alarms: schedule_data.alarms,
+        alarms: attrs.alarms,
       });
     });
 
-    it('should update human readable state', async function() {
-      instance.update(schedule_data);
+    it('should update available alarms', async function() {
+      instance.update(attrs);
 
-      expect(instance.getForDate(new Date('2021-10-01T05:45:00.000-05:00'))).to.deep.equal({
-        time_ms: 21600000,
-        start_ms: 20400000,
-        stop_ms: 23400000,
-        animation: 'sunrise',
-      });
+      const new_alarm = instance.getForDate(new Date('2021-10-01T05:40:00.000-05:00'));
+      expect(new_alarm).to.be.an.instanceOf(Alarm);
+      expect(new_alarm.hour).to.equal(6);
+      expect(new_alarm.height).to.equal(6);
     });
   });
 
@@ -79,8 +84,8 @@ describe('AlarmStore', function() {
       vol.fromJSON({
         '/var/run/alarm/state.json': JSON.stringify(alarm_data),
       });
-      schedule_data.alarms = [];
-      instance = new AlarmStore(schedule_data);
+      attrs.alarms = [];
+      instance = new Store(attrs);
     });
 
     it('should load state from disk', async function() {
@@ -140,7 +145,7 @@ describe('AlarmStore', function() {
           await instance.saveToDisk();
 
           expect(vol.toJSON()).to.deep.equal({
-            '/var/run/alarm/state.json': JSON.stringify({ ...schedule_data, fs: undefined }),
+            '/var/run/alarm/state.json': JSON.stringify({ ...attrs, fs: undefined, height: undefined }),
           });
         });
 
@@ -169,7 +174,7 @@ describe('AlarmStore', function() {
           await instance.saveToDisk();
 
           expect(vol.toJSON()).to.deep.equal({
-            '/var/run/alarm/state.json': JSON.stringify({ ...schedule_data, fs: undefined }),
+            '/var/run/alarm/state.json': JSON.stringify({ ...attrs, fs: undefined, height: undefined }),
           });
         });
       });
@@ -195,51 +200,50 @@ describe('AlarmStore', function() {
     let fake_now;
 
     beforeEach(async function() {
-      fake_now = new Date('2021-10-01T05:45:00.729-05:00');
+      fake_now = new Date('2021-10-01T05:40:00.729-05:00');
     });
 
     it('should return an event for that date', async function() {
-      expect(instance.getForDate(fake_now)).to.deep.equal({
-        time_ms: 21600000,
-        start_ms: 20400000,
-        stop_ms: 23400000,
-        animation: 'sunrise',
-      });
+      const result = instance.getForDate(fake_now);
+      expect(result).to.be.an.instanceOf(Alarm);
+      expect(result.hour).to.equal(6);
+      expect(result.minute).to.equal(0);
     });
 
     context('when there are multiple events for that day of the week', function() {
-      beforeEach(async function() {
-        fake_now = new Date('2021-10-01T06:00:00.729-05:00');
-      });
+      it('should return the matching event', async function() {
 
-      it('should return the first event that has started', async function() {
-        expect(instance.getForDate(fake_now)).to.deep.equal({
-          time_ms: 21600000,
-          start_ms: 20400000,
-          stop_ms: 23400000,
-          animation: 'sunrise',
-        });
+        const six_am_starting_on = sinon.spy(instance._days[util.FRIDAY_INDEX][0], 'startingOn');
+        const six_am = new Date('2021-10-01T05:40:00.729-05:00');
+        const six_am_alarm = instance.getForDate(six_am);
+        expect(six_am_alarm).to.be.an.instanceOf(Alarm);
+        expect(six_am_alarm.hour).to.equal(6);
+        expect(six_am_alarm.minute).to.equal(0);
+        expect(six_am_starting_on.args).to.deep.equal([
+          [six_am],
+        ]);
+
+        const eight_am_starting_on = sinon.spy(instance._days[util.FRIDAY_INDEX][1], 'startingOn');
+        const eight_am = new Date('2021-10-01T07:40:00.729-05:00')
+        const eight_am_alarm = instance.getForDate(eight_am);
+        expect(eight_am_alarm).to.be.an.instanceOf(Alarm);
+        expect(eight_am_alarm.hour).to.equal(8);
+        expect(eight_am_alarm.minute).to.equal(0);
+        expect(eight_am_starting_on.args).to.deep.equal([
+          [eight_am],
+        ]);
       });
     });
 
-    context('when no alarm has started', function() {
-      it('should return null', async function() {
-        fake_now = new Date('2021-10-01T05:30:00.000-05:00');
-        // FIXME: would be better to return a known "no alarm" value
-        expect(instance.getForDate(fake_now)).to.deep.equal(null);
-      });
-    });
-
-    context('when there is no alarm that matches the provided js date', function() {
+    context('when no alarm matches', function() {
       beforeEach(async function() {
-        instance.update({
-          alarms: [],
-        });
+        fake_now = new Date('2021-10-01T01:30:00.000-05:00');
       });
 
+      // FIXME: return a known "no alarm" value instead of null
       it('should return null', async function() {
-        // FIXME: would be better to return a known "no alarm" value
-        expect(instance.getForDate(fake_now)).to.deep.equal(null);
+        const seven_am = instance.getForDate(new Date('2021-10-01T07:00:00.729-05:00'));
+        expect(seven_am).to.be.equal(null);
       });
     });
   });

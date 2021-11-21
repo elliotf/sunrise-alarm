@@ -1,26 +1,91 @@
-require('./helper');
+const { expect } = require('./helper');
 
-const expect = require('chai').expect;
-const Animation = require('../animation');
-const config = require('../config');
+const KeyFrameBase = require('../animation/key_frame_base');
 
-describe('Animation', function() {
+describe('Animation/KeyFrameBase', function() {
   let inst;
   let opts;
+  let key_frames;
 
   beforeEach(async function() {
+    key_frames = [
+      // start black
+      {
+        index: -1,
+        formula: [
+          [0,0,0,0],
+          [1,0,0,0],
+        ],
+      },
+      // red slowly fading up from bottom
+      {
+        index: -0.5,
+        formula: [
+          [0,255,0,0],
+          [1,0,0,0],
+        ],
+      },
+      // orange -> yellow
+      {
+        index: -0.25,
+        formula: [
+          [0,255,255,0],
+          [0.25,255,128,0],
+          [1,255,0,0],
+        ],
+      },
+      // full white
+      {
+        index: 0,
+        formula: [
+          [0,255,255,255],
+          [1,255,255,255],
+        ],
+      },
+      // fade to black
+      {
+        index: 1,
+        formula: [
+          [0,0,0,0],
+          [1,0,0,0],
+        ],
+      },
+    ];
+
     opts = {
+      key_frames,
       height: 3,
-      key_frames: config.animations.sunrise,
     };
 
-    inst = new Animation(opts);
+    inst = new KeyFrameBase(opts);
   });
 
   describe('#at', function() {
+    it('should return a list of colors to fill, from bottom to top', async function() {
+      expect(inst.at(-1)).to.deep.equal([
+        [0,0,0],
+        [0,0,0],
+        [0,0,0],
+      ]);
+
+      expect(inst.at(-0.25)).to.deep.equal([
+        [255,128,0],
+        [255,64,0],
+        [255,0,0],
+      ]);
+
+      expect(inst.at(0)).to.deep.equal([
+        [255,255,255],
+        [255,255,255],
+        [255,255,255],
+      ]);
+    });
+  });
+
+  describe('#keyFramesAt', function() {
     context('when provided the first index', function() {
       it('should return the first phase', async function() {
-        expect(inst.at(-1)).to.deep.equal({
+        expect(inst.keyFramesAt(-1)).to.deep.equal({
           from: [[0,0,0],[0,0,0],[0,0,0]],
           to: [[255,0,0],[127,0,0],[0,0,0]],
           pct: 0,
@@ -30,7 +95,7 @@ describe('Animation', function() {
 
     context('when provided the central index', function() {
       it('should err towards the earlier phase', async function() {
-        expect(inst.at(0)).to.deep.equal({
+        expect(inst.keyFramesAt(0)).to.deep.equal({
           from: [[255,128,0],[255,64,0],[255,0,0]],
           to: [[255,255,255],[255,255,255],[255,255,255]],
           pct: 1,
@@ -40,7 +105,7 @@ describe('Animation', function() {
 
     context('when provided the last index', function() {
       it('should return the last phase', async function() {
-        expect(inst.at(1)).to.deep.equal({
+        expect(inst.keyFramesAt(1)).to.deep.equal({
           from: [[255,255,255],[255,255,255],[255,255,255]],
           to: [[0,0,0],[0,0,0],[0,0,0]],
           pct: 1,
@@ -97,7 +162,7 @@ describe('Animation', function() {
       expected.forEach(function({ input }) {
         actual.push({
           input,
-          output: inst.at(input),
+          output: inst.keyFramesAt(input),
         });
       });
 
@@ -146,58 +211,11 @@ describe('Animation', function() {
         expected.forEach(function({ input }) {
           actual.push({
             input,
-            output: inst.at(input),
+            output: inst.keyFramesAt(input),
           });
         });
 
         expect(actual).to.deep.equal(expected);
-      });
-    });
-  });
-
-  describe('#gradientFrom', function() {
-    it('should return a gradient from the description', async function() {
-      expect(inst.gradientFrom([[0,0,0,0],[1,255,0,0]])).to.deep.equal([
-        [0,0,0],
-        [127,0,0],
-        [255,0,0],
-      ]);
-    });
-
-    context('when more than one stop is provided', function() {
-      it('should interpolate correctly', async function() {
-        opts.height = 5;
-        const inst = new Animation(opts);
-        expect(inst.gradientFrom([[0,255,0,0],[0.5,1,0,0],[1,3,0,0]])).to.deep.equal([
-          [255,0,0],
-          [128,0,0],
-          [1,0,0],
-          [2,0,0],
-          [3,0,0],
-        ]);
-      });
-    });
-
-    context('when a stop is provided for each pixel in the Y', function() {
-      beforeEach(async function() {
-        opts.height = 2;
-        inst = new Animation(opts);
-      });
-
-      it('should use those stops as the pixel values', async function() {
-        expect(inst.gradientFrom([[0,255,0,0],[0.5,0,0,0],[1,0,0,0]])).to.deep.equal([
-          [255,0,0],
-          [0,0,0],
-        ]);
-      });
-    });
-
-    context('when more stops are provided than there are pixels', function() {
-      it('should throw', async function() {
-        inst = new Animation(opts);
-        expect(function() {
-          inst.gradientFrom([[0,255,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]);
-        }).to.throw('Cannot fit 4 deltas into 3 pixels');
       });
     });
   });

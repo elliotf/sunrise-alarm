@@ -1,6 +1,15 @@
-const MINUTE_IN_MS = exports.MINUTE_IN_MS = 60*1000;
+const SECOND_IN_MS = exports.SECOND_IN_MS = 1000;
+const MINUTE_IN_MS = exports.MINUTE_IN_MS = 60*SECOND_IN_MS;
 const HOUR_IN_MS = exports.HOUR_IN_MS = 60*MINUTE_IN_MS;
 const DAY_IN_MS = exports.DAY_IN_MS = 24*HOUR_IN_MS;
+
+exports.SUNDAY_INDEX = 0;
+exports.MONDAY_INDEX = 1;
+exports.TUESDAY_INDEX = 2;
+exports.WEDNESDAY_INDEX = 3;
+exports.THURSDAY_INDEX = 4;
+exports.FRIDAY_INDEX = 5;
+exports.SATURDAY_INDEX = 6;
 
 exports.round = function(number, places) {
   const t = Math.pow(10,places);

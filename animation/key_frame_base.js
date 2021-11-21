@@ -1,13 +1,13 @@
-const util = require('./util');
+const AnimationBase = require('./base');
+const util = require('../util');
 
-class Animation {
+class KeyFrameBase extends AnimationBase{
   constructor(opts) {
+    super(opts);
+
     const {
-      height,
       key_frames,
     } = opts;
-
-    this.height = height;
 
     this.gradient_schedule = key_frames.map(({ index, formula }) => {
       const gradient = this.gradientFrom(formula);
@@ -25,6 +25,31 @@ class Animation {
   }
 
   at(offset) {
+    const {
+      from,
+      to,
+      pct,
+    } = this.keyFramesAt(offset);
+
+    const channels = [0,1,2]; // R G B indexes into color array
+
+    const result = [];
+
+    for (let y = 0; y < this.height; ++y) {
+      const color = new Array(3);
+
+      channels.forEach((ch) => {
+        const delta = to[y][ch] - from[y][ch];
+        color[ch] = from[y][ch] + delta*pct;
+      });
+
+      result.push(color);
+    }
+
+    return result;
+  }
+
+  keyFramesAt(offset) {
     const last = this.gradient_schedule.length - 1;
     if (offset < this.gradient_schedule[0].index || offset > this.gradient_schedule[last].index) {
       return this.off;
@@ -51,40 +76,6 @@ class Animation {
 
     throw new Error('Should not get here');
   }
-
-  gradientFrom(stops) {
-    if ((stops.length-1) > this.height) {
-      throw new Error(`Cannot fit ${stops.length-1} deltas into ${this.height} pixels`);
-    }
-
-    const gradient = new Array(this.height);
-
-    const channels = [0,1,2]; // R G B indexes into color array
-
-    for (let i = 0; i < stops.length - 1; ++i) {
-      const [from_pct, ...from] = stops[i];
-      const [to_pct, ...to] = stops[i+1];
-      const delta = channels.map((ch) => {
-        return to[ch] - from[ch];
-      });
-
-      const start = Math.floor(from_pct*this.height);
-      const stop = Math.ceil(to_pct*this.height);
-
-      for (let y = start; y < stop && y < this.height; ++y) {
-        const pct_up = (y-start) / Math.max(stop-start-1,1);
-
-        const color = [];
-        channels.forEach((ch) => {
-          color[ch] = Math.floor(from[ch] + delta[ch]*pct_up);
-        });
-
-        gradient[y] = color;
-      }
-    }
-
-    return gradient;
-  }
 }
 
-module.exports = Animation;
+module.exports = KeyFrameBase;

@@ -1,3 +1,3 @@
-use <../things/main.scad>;
+use <../things/full-size.scad>;
 
 bottom_end_cap();
