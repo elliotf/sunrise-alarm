@@ -57,6 +57,7 @@ class Alarm {
     return util.round(offset, 5);
   }
 
+  // untested
   async updateNow(d, led_string) {
     const offset = this.determineOffset(d);
 
@@ -64,6 +65,12 @@ class Alarm {
     const colors = this._animator.at(offset, d);
 
     await led_string.fill(colors);
+
+    if (offset > 1) {
+      return false;
+    }
+
+    return true;
   }
 
   startingOn(start_date) {

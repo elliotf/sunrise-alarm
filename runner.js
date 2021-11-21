@@ -1,12 +1,12 @@
 const config = require('./config');
+const Alarm = require('./alarm');
 const LedString = require('./led_string');
 const util = require('./util');
 
-const noop_alarm = {
-  updateNow: function() {
-    // noop, or turn LEDs off?
-  },
-};
+const noop_alarm = new Alarm({
+  animation: 'off',
+  height: 100, // because we don't know the height of alarm here, over-generate colors
+});
 
 class Runner {
   constructor({ store }) {
@@ -26,8 +26,10 @@ class Runner {
       }
     }
 
-    const result = await this.current_alarm.updateNow(d, display); // take in LED string?
-    // if <some sort of result>, replace current alarm with noop
+    const still_valid = await this.current_alarm.updateNow(d, display); // take in LED string?
+    if (!still_valid) {
+      this.current_alarm = noop_alarm;
+    }
   }
 }
 

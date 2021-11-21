@@ -150,5 +150,22 @@ describe('Alarm', function() {
   });
 
   describe('#updateNow', function() {
+    let inst;
+    let date;
+
+    beforeEach(async function() {
+      date = new Date('2021-01-01T00:00:00-06:00');
+      inst = instance.startingOn(date);
+    });
+
+    it('should resolve true', async function() {
+      expect(await inst.updateNow(new Date('2021-01-01T00:04:00-06:00'), fake_display)).to.equal(true);
+    });
+
+    context('when the alarm has passed its period', function() {
+      it('should resolve false', async function() {
+        expect(await inst.updateNow(new Date('2021-01-01T05:00:00-06:00'), fake_display)).to.equal(false);
+      });
+    });
   });
 });

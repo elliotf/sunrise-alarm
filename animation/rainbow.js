@@ -20,9 +20,9 @@ function colorWheel(pos, max_brightness=0.3) {
 
 class Rainbow extends AnimationBase {
   at(offset, date) {
-    const brightness = 0.2;
-    const colors_at_once=128;
-    const speed = 3000;
+    const brightness = 0.6;
+    const colors_at_once=256;
+    const speed = 4000;
     const pos = Math.floor((date.valueOf() % speed / speed) * 256);
 
     const colors = [];

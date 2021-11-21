@@ -55,7 +55,7 @@ function start() {
   // this should probably be done more intelligent to avoid a race between LED updates and the interval
   // it's not a problem so far, though
 
-  if (false) {
+  if (true) {
     // normal operation
     const fps = 60;
     const update_interval_ms = util.SECOND_IN_MS/fps;

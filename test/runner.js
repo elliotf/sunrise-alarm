@@ -49,7 +49,7 @@ describe('Runner', function() {
   describe('#updateNow', function() {
     context('when there is a current alarm', function() {
       beforeEach(async function() {
-        inst.current_alarm = new Alarm({ ...store_attrs.alarms[0], height: 5 });
+        await inst.updateNow(fake_now, fake_display);
       });
 
       it('should delegate to #updateNow on the current alarm', async function() {
@@ -60,6 +60,18 @@ describe('Runner', function() {
         expect(inst.current_alarm.updateNow.args).to.deep.equal([
           [fake_now, fake_display],
         ]);
+      });
+
+      context('when the time is past the lifetime of the current alarm (Alarm#updateNow returns false)', function() {
+        beforeEach(async function() {
+          fake_now = new Date('2021-01-02T10:00:00.000-06:00');
+        });
+
+        it('should replace the alarm with the noop alarm', async function() {
+          await inst.updateNow(fake_now, fake_display);
+
+          expect(inst.current_alarm.animation).to.equal('off');
+        });
       });
     });
 
@@ -74,6 +86,7 @@ describe('Runner', function() {
         ]);
 
         expect(inst.current_alarm).to.be.an.instanceof(Alarm);
+        expect(inst.current_alarm.animation).to.equal('sunrise');
       });
 
       context('and there should be no alarm', function() {
@@ -82,7 +95,7 @@ describe('Runner', function() {
         });
 
         it('should return without error', async function() {
-          inst.updateNow(fake_now, fake_display);
+          await inst.updateNow(fake_now, fake_display);
         });
       });
     });
