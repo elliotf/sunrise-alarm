@@ -1,5 +1,4 @@
 const { expect } = require('./helper');
-
 const Rainbow = require('../animation/rainbow');
 
 describe('Animation/Rainbow', function() {

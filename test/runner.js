@@ -3,8 +3,6 @@ const Alarm = require('../alarm');
 const LedString = require('../led_string');
 const Runner = require('../runner');
 const Store = require('../store');
-const minute_in_ms = 60*1000;
-const hour_in_ms = 60*minute_in_ms;
 
 describe('Runner', function() {
   let inst;
@@ -97,6 +95,75 @@ describe('Runner', function() {
         it('should return without error', async function() {
           await inst.updateNow(fake_now, fake_display);
         });
+      });
+    });
+  });
+
+  describe('#setIdleAnimation', function() {
+    it('should set the `current_alarm` to the new mode', async function() {
+      const starting = inst.current_alarm;
+
+      expect(starting.animation).to.equal('off');
+      expect(inst.idle_alarm).to.equal(starting);
+
+      inst.setIdleAnimation('on');
+
+      const set_on = inst.current_alarm;
+      expect(inst.idle_alarm).to.equal(set_on);
+      expect(set_on.animation).to.equal('on');
+
+      inst.setIdleAnimation('rainbow');
+
+      const set_rainbow = inst.current_alarm;
+      expect(inst.idle_alarm).to.equal(set_rainbow);
+      expect(set_rainbow.animation).to.equal('rainbow');
+    });
+
+    context('when an invalid mode is specified', function() {
+      it('should throw an error', async function() {
+        expect(function() {
+          inst.setIdleAnimation('invalid');
+        }).to.throw(Error, /invalid.*animation/i);
+      });
+    });
+  });
+
+  describe('#toggleIdleAnimation', function() {
+    it('should cycle through idle animations', async function() {
+      expect(inst.current_alarm.animation).to.equal('off');
+
+      inst.toggleIdleAnimation();
+      expect(inst.current_alarm.animation).to.equal('on');
+
+      inst.toggleIdleAnimation();
+      expect(inst.current_alarm.animation).to.equal('rainbow');
+
+      inst.toggleIdleAnimation();
+      expect(inst.current_alarm.animation).to.equal('off');
+
+      inst.toggleIdleAnimation();
+      expect(inst.current_alarm.animation).to.equal('on');
+    });
+
+    context('when an alarm is active', function() {
+      beforeEach(async function() {
+        await inst.updateNow(fake_now, fake_display);
+      });
+
+      it('should replace it with an idle animation', async function() {
+        expect(inst.current_alarm.animation).to.equal('sunrise');
+
+        inst.toggleIdleAnimation();
+        expect(inst.current_alarm.animation).to.equal('off');
+
+        inst.toggleIdleAnimation();
+        expect(inst.current_alarm.animation).to.equal('on');
+
+        inst.toggleIdleAnimation();
+        expect(inst.current_alarm.animation).to.equal('rainbow');
+
+        inst.toggleIdleAnimation();
+        expect(inst.current_alarm.animation).to.equal('off');
       });
     });
   });

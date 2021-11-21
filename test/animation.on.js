@@ -1,7 +1,7 @@
 const { expect, sinon } = require('./helper');
-const Off = require('../animation/off');
+const On = require('../animation/on');
 
-describe('Animation/Off', function() {
+describe('Animation/On', function() {
   let inst;
   let opts;
   let unused;
@@ -12,17 +12,17 @@ describe('Animation/Off', function() {
     };
     unused = null;
 
-    inst = new Off(opts);
+    inst = new On(opts);
   });
 
   describe('#at', function() {
     it('should return a list of colors to fill, from bottom to top', async function() {
       expect(inst.at(unused, unused)).to.deep.equal([
-        [0,0,0],
-        [0,0,0],
-        [0,0,0],
-        [0,0,0],
-        [0,0,0],
+        [192,192,192],
+        [192,192,192],
+        [192,192,192],
+        [192,192,192],
+        [192,192,192],
       ]);
     });
   });
