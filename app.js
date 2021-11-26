@@ -1,10 +1,12 @@
 const BodyParser = require('body-parser');
 const express = require('express');
+// const { Gpio } = require('onoff');
 const fs = require('fs').promises;
 
 const LedString = require('./led_string');
 const Runner = require('./runner');
 const Store = require('./store');
+const util = require('./util');
 const log = require('./lib/log')(__filename);
 const Animations = require('./animation');
 
@@ -40,12 +42,85 @@ const runner = new Runner({
   store,
 });
 
+/*
+const button = new Gpio(4, 'in', 'rising', { debounceTimeout: 10 });
+button.watch(() => {
+  if (err) {
+    throw err;
+  }
+
+  console.log('button pressed!');
+});
+*/
+
 const app = express();
 
-app.use(BodyParser.json())
+app.set('views', './views');
+app.set('view engine', 'pug');
+app.use(BodyParser.json());
+app.use(BodyParser.urlencoded({ extended: true }));
 
 app.get('/', function(req, res, next) {
-  res.send('ok');
+  const current_animation = runner.getCurrentAnimation();
+  const animations = runner.getIdleAnimations().map((name) => {
+    return {
+      name,
+      disabled: name === current_animation,
+      id: `set-animation-${name}`,
+    };
+  });
+
+  const alarms = store.getAlarms().map((alarm) => {
+    const hours = util.range(0,23).map((value) => {
+      return {
+        value,
+        label: value.toString().padStart(2, '0'),
+        selected: value === alarm.hour,
+      };
+    });
+
+    const minutes = util.range(0,59).map((value) => {
+      return {
+        value,
+        label: value.toString().padStart(2, '0'),
+        selected: (value === alarm.minute) ? 1 : 0,
+      };
+    });
+
+    const days = alarm.days.map((day) => {
+      return {
+        checked: (day) ? true : false,
+      };
+    });
+
+    return {
+      hours,
+      minutes,
+      days,
+    }
+  });
+
+  console.log('alarms', alarms);
+
+  const context = {
+    alarms,
+    animations,
+  };
+
+  return res.render('index.pug', context);
+});
+
+app.post('/forms/animation', function(req, res, next) {
+  // untested
+  runner.setIdleAnimation(req.body.animation);
+
+  return res.redirect('/')
+});
+
+app.post('/forms/alarm', function(req, res, next) {
+  // untested
+
+  return res.redirect('/')
 });
 
 app.post('/api/animation/toggle', function(req, res, next) {

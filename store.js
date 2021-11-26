@@ -73,6 +73,10 @@ class Store {
     }
   }
 
+  getAlarms() {
+    return this.currentState().alarms;
+  }
+
   getForDate(date) {
     const day = date.getDay();
 

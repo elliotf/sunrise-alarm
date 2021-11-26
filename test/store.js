@@ -247,4 +247,42 @@ describe('Store', function() {
       });
     });
   });
+
+  describe('#getAlarms', function() {
+    it('should return current alarms', async function() {
+      expect(instance.getAlarms()).to.deep.equal([
+        {
+          hour: 8,
+          days: [ true,false,false,false,false,false,true ],
+        },
+        {
+          hour: 6,
+          days: [ false,true,true,true,true,true,false ],
+        },
+        {
+          hour: 8,
+          days: [ false,true,true,true,true,true,false ],
+        },
+      ]);
+    });
+
+    it('should return copies of state, in case caller modifies something', async function() {
+      const first = instance.getAlarms();
+      const second = instance.getAlarms();
+      expect(first).to.deep.equal(second);
+      expect(first).to.not.equal(second);
+    });
+
+    context('when there are no alarms', function() {
+      beforeEach(async function() {
+        instance.update({
+          alarms: [],
+        });
+      });
+
+      it('should return an empty array', async function() {
+        expect(instance.getAlarms()).to.deep.equal([]);
+      });
+    });
+  });
 });

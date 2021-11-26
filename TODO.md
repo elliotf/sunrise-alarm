@@ -1,29 +1,9 @@
 # todo
 
-* redesign/organization
-  * alarm runner
-    * takes in
-      * scheduler
-      * led_string
-        * or display?
-        * or a render function that takes a display?
-  * alarm store
-    * takes in
-      * fs
-  * animator
-    * stores keyframes for animations by name
-      * sunrise
-      * sunset
-      * on
-      * off
-      * etc
-
 * todo
-  * smoother gradients
-    * try out multi-column lighting
-      * gang columns together, so that N light up together?
-        * now `const value = LedString.valueForColumn(this.width, x, from[y][ch] + delta[ch]*pct);`
-        * maybe `const value = LedString.valueForColumn(this.width, x % num_columns, from[y][ch] + delta[ch]*pct);`
+  * web UI
+    * adjust schedule
+    * YAGNI: adjust animations
   * dismiss/on/off button
     * toggle between on/off
     * setting that state for N minutes?
@@ -38,17 +18,6 @@
       * angle the contact edge for more support
         * surface farthest from the key switch is the bridge that is susceptible to sag
         * supports the angled surface that interfaces with the key retainer clip
-  * web UI
-    * adjust schedule
-    * YAGNI: adjust animations
-  * multiple events per day
-    * alarm has a "current alarm"
-      * this would let us get rid of "disabled until" for snoozing purposes
-      * otherwise asks scheduler if there is an alarm to process
-    * scheduler
-      * normalized view of alarms is stored on-disk as json
-      * hydrates into denormalized view?
-    * have a sunset animation as well as sunrise
   * away mode?
     * random times?
   * production-ize
@@ -79,9 +48,22 @@
     * config/default vs config/test ?
   * Alarm#snooze (made it #dismiss instead of snooze)
     * make #updateNow() do nothing if new now < current now
+  * smoother gradients
+    * try out multi-column lighting
+      * gang columns together, so that N light up together?
+        * now `const value = LedString.valueForColumn(this.width, x, from[y][ch] + delta[ch]*pct);`
+        * maybe `const value = LedString.valueForColumn(this.width, x % num_columns, from[y][ch] + delta[ch]*pct);`
+  * multiple events per day
+    * alarm has a "current alarm"
+      * this would let us get rid of "disabled until" for snoozing purposes
+      * otherwise asks scheduler if there is an alarm to process
+    * scheduler
+      * normalized view of alarms is stored on-disk as json
+      * hydrates into denormalized view?
+    * have a sunset animation as well as sunrise
   * update state on a schedule
     * every N milliseconds/seconds
-      * `setInterval(() => { Alarm#updateNow(new Date); }, 1000);`
+      * `setInterval(function() { Alarm#updateNow(new Date); }, 1000);`
       * which will get interpolated
   * hardware
     * test out LED strip to make sure it's not busted
@@ -98,6 +80,23 @@
       * power
         * RED: 5V
         * BLACK: GND
+  * redesign/organization
+    * alarm runner
+      * takes in
+        * scheduler
+        * led_string
+          * or display?
+          * or a render function that takes a display?
+    * alarm store
+      * takes in
+        * fs
+    * animator
+      * stores keyframes for animations by name
+        * sunrise
+        * sunset
+        * on
+        * off
+        * etc
 * todistract
   * once the alarm is going off, flash the lights?
     * that sounds kind of unpleasant, but maybe a pulse?

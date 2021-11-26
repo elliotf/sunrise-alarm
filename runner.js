@@ -18,6 +18,14 @@ class Runner {
     this.current_alarm = this.idle_alarm;
   }
 
+  getCurrentAnimation() {
+    return this.current_alarm.animation;
+  }
+
+  getIdleAnimations() {
+    return [...idle_animations];
+  }
+
   setIdleAnimation(animation) {
     const animation_i = idle_animations.indexOf(animation);
     if (animation_i < 0) {

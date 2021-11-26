@@ -99,6 +99,22 @@ describe('Runner', function() {
     });
   });
 
+  describe('#getCurrentAnimation', function() {
+    it('should return the animation of the `current_alarm`', async function() {
+      expect(inst.getCurrentAnimation()).to.equal('off');
+    });
+  });
+
+  describe('#getAnimations', function() {
+    it('should return a list of valid idle animations', async function() {
+      expect(inst.getIdleAnimations()).to.deep.equal([
+        'off',
+        'on',
+        'rainbow',
+      ]);
+    });
+  });
+
   describe('#setIdleAnimation', function() {
     it('should set the `current_alarm` to the new mode', async function() {
       const starting = inst.current_alarm;

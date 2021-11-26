@@ -26,7 +26,7 @@ function start() {
 
   if (true) {
     // normal operation
-    const fps = 60;
+    const fps = 120;
     const update_interval_ms = util.SECOND_IN_MS/fps;
     setInterval(() => {
       const now = new Date();
