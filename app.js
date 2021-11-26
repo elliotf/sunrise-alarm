@@ -130,6 +130,22 @@ app.post('/forms/alarm', function(req, res, next) {
     .catch(next);
 });
 
+app.post('/forms/delete_alarm', function(req, res, next) {
+  // untested
+  const alarm_index = req.body.alarm_index;
+  const current_state = store.currentState();
+
+  current_state.alarms.splice(alarm_index);
+
+  store.update(current_state);
+
+  store.saveToDisk()
+    .then(function() {
+      return res.redirect('/')
+    })
+    .catch(next);
+});
+
 app.post('/api/animation/toggle', function(req, res, next) {
   runner.toggleIdleAnimation();
 

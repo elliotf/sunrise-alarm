@@ -3,6 +3,10 @@ html
   head
     title Sunrise Alarm Clock
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    style.
+      .inline {
+        display: inline-block;
+      }
   body
     .title.container
       h1 Sunrise Alarm Clock
@@ -12,11 +16,14 @@ html
           input.animation.btn(type="submit", name="animation", value=animation.name, disabled=animation.disabled)
     each alarm,a_i in alarms
       .alarm.container
-        form(action="/forms/alarm", method="POST")
-          input(type="hidden", name="alarm_index", value=a_i)
-          .row
+        .row
+          form.inline(action="/forms/alarm", method="POST")
+            input(type="hidden", name="alarm_index", value=a_i)
             input.timepicker(type="time", name='alarm_time' value=alarm.time)
             each day,d_i in alarm.days
               label
                 input.filled-in(type="checkbox", name=`day_${d_i}`, checked=day)
             input(type="submit", value="Save")
+          form.inline(action="/forms/delete_alarm", method="POST")
+            input(type="hidden", name="alarm_index", value=a_i)
+            input(type="submit", value="Delete")
