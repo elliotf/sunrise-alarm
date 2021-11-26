@@ -19,11 +19,40 @@ describe('HTTP API', function() {
 
       const $ = cheerio.load(res.text);
 
-      expect($('.current').html()).to.contain('off');
-      expect($('.current').html()).to.contain('on');
-      expect($('.current').html()).to.contain('rainbow');
+      const buttons = $('.current .btn.animation');
+      expect(buttons).to.have.length(3);
 
-      expect($('.alarm')).to.have.length(2);
+      expect(buttons.eq(0).attr('value')).to.equal("off");
+      expect(buttons.eq(0).attr('disabled')).to.equal("disabled");
+      expect(buttons.eq(1).attr('value')).to.equal("on");
+      expect(buttons.eq(1).attr('disabled')).to.equal(undefined);
+      expect(buttons.eq(2).attr('value')).to.equal("rainbow");
+      expect(buttons.eq(2).attr('disabled')).to.equal(undefined);
+    });
+
+    it.skip('should show existing alarms with an additional empty new alarm', async function() {
+      const res = await request(app)
+        .get(url)
+        .expect(200);
+
+      const $ = cheerio.load(res.text);
+
+      const alarms = $('.alarm.container');
+      expect(alarms).to.have.length(3);
+      expect(alarms.eq(0).children('.timepicker')).to.have.length(1);
+      expect(alarms.eq(0).children('.timepicker').attr('value')).to.equal('watsss');
+    });
+
+    context.skip('when there are no alarms configured', function() {
+      it('should show an empty new alarm', async function() {
+        const res = await request(app)
+          .get(url)
+          .expect(200);
+
+        const $ = cheerio.load(res.text);
+
+        expect($('.alarm')).to.have.length(3);
+      });
     });
   });
 

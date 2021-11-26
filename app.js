@@ -70,37 +70,21 @@ app.get('/', function(req, res, next) {
     };
   });
 
-  const alarms = store.getAlarms().map((alarm) => {
-    const hours = util.range(0,23).map((value) => {
-      return {
-        value,
-        label: value.toString().padStart(2, '0'),
-        selected: value === alarm.hour,
-      };
-    });
-
-    const minutes = util.range(0,59).map((value) => {
-      return {
-        value,
-        label: value.toString().padStart(2, '0'),
-        selected: (value === alarm.minute) ? 1 : 0,
-      };
-    });
-
-    const days = alarm.days.map((day) => {
-      return {
-        checked: (day) ? true : false,
-      };
-    });
+  const alarms = store.getAlarms().map((alarm, index) => {
+    const time = `${(alarm.hour || 0).toString().padStart(2, '0')}:${(alarm.minute || 0).toString().padStart(2,'0')}`;
 
     return {
-      hours,
-      minutes,
-      days,
-    }
+      days: alarm.days,
+      time,
+    };
   });
 
-  console.log('alarms', alarms);
+  // dummy blank alarm, to be able to add a new alarm
+  alarms.push({
+    hour: 9,
+    minute: 0,
+    days: [false,false,false,false,false,false,false],
+  });
 
   const context = {
     alarms,
@@ -119,8 +103,31 @@ app.post('/forms/animation', function(req, res, next) {
 
 app.post('/forms/alarm', function(req, res, next) {
   // untested
+  const alarm_index = req.body.alarm_index;
+  const current_state = store.currentState();
+  const match = req.body.alarm_time.match(/^(\d+):(\d+)$/);
+  if (!match) {
+    // 400 of some sort
+  }
+  const alarm = current_state.alarms[alarm_index] || {};
 
-  return res.redirect('/')
+  alarm.hour = (match) ? Number(match[1]) : 0;
+  alarm.minute = (match) ? Number(match[2]) : 0;
+
+  alarm.days = [];
+  for(let i = 0; i < 7; ++i) {
+    alarm.days[i] = (req.body[`day_${i}`]) ? true : false;
+  }
+
+  current_state.alarms[alarm_index] = alarm;
+
+  store.update(current_state);
+
+  store.saveToDisk()
+    .then(function() {
+      return res.redirect('/')
+    })
+    .catch(next);
 });
 
 app.post('/api/animation/toggle', function(req, res, next) {

@@ -2,7 +2,6 @@ doctype html
 html
   head
     title Sunrise Alarm Clock
-    //link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
   body
     .title.container
@@ -10,28 +9,14 @@ html
     .current.container
       form(action='/forms/animation', method='POST')
         each animation in animations
-          input.btn(type="submit", name="animation", value=animation.name, disabled=animation.disabled)
-    each alarm,index in alarms
+          input.animation.btn(type="submit", name="animation", value=animation.name, disabled=animation.disabled)
+    each alarm,a_i in alarms
       .alarm.container
         form(action="/forms/alarm", method="POST")
+          input(type="hidden", name="alarm_index", value=a_i)
           .row
-            select.input-field(id="alarm[index]hour")
-              each hour in alarm.hours
-                option(value=hour.value, selected=hour.selected)= hour.label
-            select.input-field(id="alarm[index]minute")
-              each minute in alarm.minutes
-                option(value=minute.value, selected=minute.selected)= minute.label
-          .row
-            each day,index in alarm.days
+            input.timepicker(type="time", name='alarm_time' value=alarm.time)
+            each day,d_i in alarm.days
               label
-                input.filled-in(type="checkbox", checked=day.checked)
-    //script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.0/jquery.min.js")
-    //script(src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js")
-    //script(type="text/javascript").
-    //  $(document).ready(function(){
-    //    $('select').formSelect();
-    //  });
-    //  // document.addEventListener('DOMContentLoaded', function() {
-    //  //   //var elems = document.querySelectorAll('select');
-    //  //   //var instances = M.FormSelect.init(elems, options);
-    //  // });
+                input.filled-in(type="checkbox", name=`day_${d_i}`, checked=day)
+            input(type="submit", value="Save")
