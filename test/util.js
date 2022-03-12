@@ -3,7 +3,7 @@ const { expect } = require('./helper');
 const util = require('../util');
 
 describe('Util', function() {
-  describe('#msIntoDay', function() {
+  describe('.msIntoDay', function() {
     let fake_now;
 
     beforeEach(async function() {
@@ -14,6 +14,24 @@ describe('Util', function() {
       expect(util.msIntoDay(new Date('2021-01-01T06:00:00.456-06:00'))).to.equal(21600000);
       expect(util.msIntoDay(new Date('2021-10-01T06:00:00.456-05:00'))).to.equal(21600000);
       expect(util.msIntoDay(fake_now)).to.equal(3723000);
+    });
+  });
+
+  describe('.packRGB,.unpackRGB', function() {
+    let rgb;
+
+    beforeEach(async function() {
+      rgb = [255,128,64];
+    });
+
+    it('should pack and unpack RGB', async function() {
+      const packed = util.packRGB(rgb);
+
+      expect(packed.toString(16)).to.equal('ff8040');
+
+      const unpacked = util.unpackRGB(packed);
+
+      expect(unpacked).to.deep.equal([255,128,64]);
     });
   });
 

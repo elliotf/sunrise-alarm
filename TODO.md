@@ -1,15 +1,6 @@
 # todo
 
 * todo
-  * web UI
-    * adjust schedule
-    * YAGNI: adjust animations
-  * dismiss/on/off button
-    * toggle between on/off
-    * setting that state for N minutes?
-    * added three buttons, could do on/off toggle and brighter/dimmer, etc.
-    * add a light sensor?
-      * how to avoid self pollution?
   * better fitting cherry MX sockets
     * don't latch correctly
     * a little too tall
@@ -18,6 +9,22 @@
       * angle the contact edge for more support
         * surface farthest from the key switch is the bridge that is susceptible to sag
         * supports the angled surface that interfaces with the key retainer clip
+  * more flexible scheduling
+    * have start/stop for animation schedules
+      * or have a given event run until the next
+    * auto-on, auto-off, auto-rainbow, etc.
+    * begin/end
+      * which would make animations more consistent
+        * no more "warmup" for the sunrise
+        * everything would have a float for its animation cycle?
+          * 0 is start, 1 is end of cycle, 0.000005 is very close to start
+      * The sunrise would be separate from the "full on"
+      * The warmup would be separate from the "full on"
+      * more composable animations
+        * sunrise to rainbow is an option
+  * reduce CPU requirements, increase framerate
+    * pre-generate or cache animations
+    * C++ animation generation?
   * away mode?
     * random times?
   * production-ize
@@ -33,6 +40,8 @@
     * Tidier DI style
     * easier to stub out WS2801/phy under test?
 * todone
+  * web UI
+    * adjust schedule
   * gradient formula
   * be able to get keyframes for a given point in time
   * given two keyframes and a float between them
@@ -100,3 +109,11 @@
 * todistract
   * once the alarm is going off, flash the lights?
     * that sounds kind of unpleasant, but maybe a pulse?
+  * dismiss/on/off button
+    * toggle between on/off
+    * setting that state for N minutes?
+    * added three buttons, could do on/off toggle and brighter/dimmer, etc.
+    * add a light sensor?
+      * how to avoid self pollution?
+  * web UI
+    * YAGNI: adjust animations

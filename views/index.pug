@@ -12,7 +12,7 @@ html
       h1 Sunrise Alarm Clock
     .current.container
       form(action='/forms/animation', method='POST')
-        each animation in animations
+        each animation in idle_animations
           input.animation.btn(type="submit", name="animation", value=animation.name, disabled=animation.disabled)
     each alarm,a_i in alarms
       .alarm.container
@@ -23,6 +23,10 @@ html
             each day,d_i in alarm.days
               label
                 input.filled-in(type="checkbox", name=`day_${d_i}`, checked=day)
+            select(name="animation")
+              each animation in alarm.animations
+                option(value=animation.name, selected=animation.selected)
+                  =animation.name
             input(type="submit", value="Save")
           form.inline(action="/forms/delete_alarm", method="POST")
             input(type="hidden", name="alarm_index", value=a_i)

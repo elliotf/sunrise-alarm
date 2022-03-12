@@ -1,6 +1,7 @@
 const { expect, sinon } = require('./helper');
 
 const Alarm = require('../alarm');
+const Animation = require('../animation');
 const LedString = require('../led_string');
 const util = require('../util');
 
@@ -11,16 +12,10 @@ describe('Alarm', function() {
 
   beforeEach(async function() {
     attrs = {
-      hour: 0,
-      minute: 4,
-      warmup: 1,
-      cooldown: 20,
-      days: [false,true,true,true,true,true,false],
+      begin: new Date('2021-01-01T00:00:00-06:00').valueOf(),
+      end: new Date('2021-01-01T00:10:00-06:00').valueOf(),
       animation: 'sunrise',
       height: 5,
-      begin_ms: 10,
-      peak_ms: 150,
-      end_ms: 999,
     };
 
     fake_display = new LedString({
@@ -38,42 +33,15 @@ describe('Alarm', function() {
       instance = new Alarm(attrs);
 
       expect(instance).excluding(['_animator']).to.deep.equal({
-        animation: 'sunrise',
+        animation: "sunrise",
+        begin: new Date('2021-01-01T00:00:00-06:00').valueOf(),
+        end: new Date('2021-01-01T00:10:00-06:00').valueOf(),
         height: 5,
-        hour: 0,
-        minute: 4,
-        warmup: 1,
-        cooldown: 20,
-        days: [false,true,true,true,true,true,false],
-        begin_ms: 10,
-        peak_ms: 150,
-        end_ms: 999,
-        cooldown_ms: 1200000,
-        warmup_ms: 60000,
+        window_ms: 600000,
       });
     });
 
-    context('when optional attributes are not provided', function() {
-      beforeEach(async function() {
-        attrs = {
-          hour: 6,
-          height: 6,
-        };
-
-        instance = new Alarm(attrs);
-      });
-
-      it('should populate with defaults', async function() {
-        expect(instance.hour).to.equal(6);
-        expect(instance.minute).to.equal(0);
-        expect(instance.warmup).to.equal(20);
-        expect(instance.cooldown).to.equal(30);
-        expect(instance.days).to.deep.equal([]);
-        expect(instance.animation).to.equal('sunrise');
-      });
-    });
-
-    context.skip('when an invalid animation is provided', function() {
+    context('when an invalid animation is provided', function() {
       beforeEach(async function() {
         attrs.animation = 'sunnrise';
       });
@@ -81,12 +49,37 @@ describe('Alarm', function() {
       it('should throw an error', async function() {
         expect(function() {
           instance = new Alarm(attrs);
-        }).to.throw(Error, /waffles/);
+        }).to.throw(Error, `"sunnrise" is not a valid animation`);
       });
     });
   });
 
-  describe('#startingOn', function() {
+  describe.skip('#run', function() {
+    let from;
+    let until;
+
+    beforeEach(async function() {
+      from = new Date('1970-01-01T07:00:00.000Z');
+      until = new Date('1970-01-01T07:30:00.000Z');
+    });
+
+    it('should an instance of an Alarm', async function() {
+      const result = instance.run(from, until);
+
+      expect(result).to.be.an.instanceOf(Alarm);
+      expect(result._animator).to.be.an.instanceOf(Animation.sunrise);
+      expect(result).to.not.equal(instance);
+
+      expect(result).excluding(['_animator']).to.deep.equal({
+        animation: 'sunrise',
+        height: 5,
+        begin: from.valueOf(),
+        end: until.valueOf(),
+      });
+    });
+  });
+
+  describe.skip('#startingOn', function() {
     let date;
 
     beforeEach(async function() {
@@ -96,7 +89,7 @@ describe('Alarm', function() {
     it('should return a cloned object', async function() {
       const result = instance.startingOn(date);
 
-      expect(result).excluding(['begin_ms','peak_ms','end_ms']).to.deep.equal(instance);
+      expect(result).excluding(['begin','peak_ms','end']).to.deep.equal(instance);
       expect(result).to.not.equal(instance);
 
       expect(result).excluding(['_animator']).to.deep.equal({
@@ -107,9 +100,9 @@ describe('Alarm', function() {
         warmup: 1,
         cooldown: 20,
         days: [false,true,true,true,true,true,false],
-        begin_ms: 21780000,
+        begin: 21780000,
         peak_ms: 21840000,
-        end_ms: 23040000,
+        end: 23040000,
         cooldown_ms: 1200000,
         warmup_ms: 60000,
       });
@@ -117,31 +110,19 @@ describe('Alarm', function() {
   });
 
   describe('#determineOffset', function() {
-    let inst;
-    let date;
-
-    beforeEach(async function() {
-      date = new Date('2021-01-01T00:00:00-06:00');
-      inst = instance.startingOn(date);
-    });
-
     it('should generate an offset based on alarm, warmup, and cool down', async function() {
       const expected = [
-        { input: '2021-01-01T00:00:00.000-06:00', output: -4, },
-        { input: '2021-01-01T00:03:00.000-06:00', output: -1, },
-        { input: '2021-01-01T00:03:30.000-06:00', output: -0.5, },
-        { input: '2021-01-01T00:03:59.500-06:00', output: -0.00833, },
-        { input: '2021-01-01T00:04:00.000-06:00', output: 0, },
-        { input: '2021-01-01T00:05:01.000-06:00', output: 0.05083, },
-        { input: '2021-01-01T00:22:04.000-06:00', output: 0.90333, },
-        { input: '2021-01-01T00:24:00.000-06:00', output: 1, },
-        { input: '2021-01-01T08:59:00.000-06:00', output: 26.75, },
+        { input: '2021-01-01T00:00:00.000-06:00', output: 0, },
+        { input: '2021-01-01T00:00:00.001-06:00', output: 0.00000167, },
+        { input: '2021-01-01T00:05:00.000-06:00', output: 0.5, },
+        { input: '2021-01-01T00:10:00.000-06:00', output: 1, },
+        { input: '2021-01-01T08:59:00.000-06:00', output: 53.9, },
       ];
 
       const actual = expected.map(({ input }) => {
         return {
           input,
-          output: inst.determineOffset(new Date(input)),
+          output: instance.determineOffset(new Date(input)),
         };
       });
 
@@ -150,21 +131,18 @@ describe('Alarm', function() {
   });
 
   describe('#updateNow', function() {
-    let inst;
     let date;
 
-    beforeEach(async function() {
-      date = new Date('2021-01-01T00:00:00-06:00');
-      inst = instance.startingOn(date);
-    });
-
     it('should resolve true', async function() {
-      expect(await inst.updateNow(new Date('2021-01-01T00:04:00-06:00'), fake_display)).to.equal(true);
+      expect(await instance.updateNow(new Date('2021-01-01T00:04:00-06:00'), fake_display)).to.equal(true);
+      expect(await instance.updateNow(new Date('2021-01-01T00:09:59.999-06:00'), fake_display)).to.equal(true);
+      expect(await instance.updateNow(new Date('2021-01-01T00:10:00-06:00'), fake_display)).to.equal(true);
     });
 
     context('when the alarm has passed its period', function() {
       it('should resolve false', async function() {
-        expect(await inst.updateNow(new Date('2021-01-01T05:00:00-06:00'), fake_display)).to.equal(false);
+        expect(await instance.updateNow(new Date('2021-01-01T00:10:00.001-06:00'), fake_display)).to.equal(false);
+        expect(await instance.updateNow(new Date('2021-01-01T05:00:00-06:00'), fake_display)).to.equal(false);
       });
     });
   });

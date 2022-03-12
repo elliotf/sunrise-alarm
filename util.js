@@ -25,6 +25,18 @@ exports.msIntoDay = function(date) {
   return ms_into_day;
 };
 
+exports.packRGB = function([r,g,b]) {
+  return (r << 16) | (g << 8) | (b);
+};
+
+exports.unpackRGB = function(rgb) {
+  return [
+    (rgb & 0x00ff0000) >> 16,
+    (rgb & 0x0000ff00) >> 8,
+    (rgb & 0x000000ff),
+  ];
+};
+
 exports.range = function(begin,end) {
   const result = [];
   for(let i = begin; i <= end; ++i) {

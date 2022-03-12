@@ -3,6 +3,7 @@ const config = require('./config');
 const util = require('./util');
 const log = require('./lib/log')(__filename);
 const Alarm = require('./alarm');
+const { DateTime } = require('luxon');
 
 class Store {
   constructor({ alarms=[], height, fs }) {
@@ -14,24 +15,22 @@ class Store {
     });
   }
 
-  update(update_attrs) {
+  update(input) {
     const {
       alarms,
-    } = update_attrs;
-
-    this._current_state = {
-      alarms,
-    };
+    } = input;
 
     this._days = Array.apply(null, { length: 7 }).map(() => {
       return [];
     });
 
-    alarms.forEach((alarm_input) => {
-      const alarm = new Alarm({
+    const with_defaults = alarms.map((alarm_input) => {
+      const alarm = {
         ...alarm_input,
-        height: this.height,
-      });
+      };
+
+      alarm.hour = alarm.hour || 0;
+      alarm.minute = alarm.minute || 0;
 
       alarm.days.forEach((active,day_i) => {
         if (!active) {
@@ -40,7 +39,23 @@ class Store {
 
         this._days[day_i].push(alarm)
       });
+
+      return alarm;
     });
+
+    with_defaults.sort((a,b) => {
+      const hour_diff = a.hour - b.hour;
+      const minute_diff = a.minute - b.minute;
+      if (hour_diff) {
+        return hour_diff;
+      }
+
+      return minute_diff;
+    });
+
+    this._current_state = {
+      alarms: with_defaults,
+    };
 
     this._days.forEach((day) => {
       day.sort((a,b) => {
@@ -79,14 +94,24 @@ class Store {
 
   getForDate(date) {
     const day = date.getDay();
+    date.setSeconds(0);
 
     const alarms = this._days[day];
     for (let i = 0; i < alarms.length; ++i) {
       const alarm = alarms[i];
-      const maybe = new Date(date.valueOf() + alarm.warmup_ms);
 
-      if (maybe.getHours() === alarm.hour && maybe.getMinutes() === alarm.minute) {
-        return alarm.startingOn(date);
+      if (date.getHours() === alarm.hour && date.getMinutes() === alarm.minute) {
+        const begin = DateTime.fromJSDate(date).set({ hour: alarm.hour, minute: alarm.minute }).toJSDate();
+        const next_alarm = alarms[i+1];
+        const end = (next_alarm)
+                  ? DateTime.fromJSDate(date).set({ hour: next_alarm.hour, minute: next_alarm.minute }).toJSDate()
+                  : DateTime.fromJSDate(date).startOf('day').plus({ days: 1 }).toJSDate()
+        return new Alarm({
+          ...alarm,
+          begin,
+          end,
+          height: this.height,
+        });
       }
     }
 

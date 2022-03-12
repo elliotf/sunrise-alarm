@@ -1,10 +1,27 @@
 const { expect, sinon } = require('./helper');
 const request = require('supertest');
 const cheerio = require('cheerio');
-const { app, runner } = require('../app');
+const { app, runner, store } = require('../app');
 
-// probably want to
 describe('HTTP API', function() {
+  beforeEach(async function() {
+    store.update({
+      alarms: [
+        {
+          animation: "sunrise",
+          hour: 7,
+          minute: 30,
+          days: [ true,false,false,false,false,false,true ],
+        },
+        {
+          animation: "sunrise",
+          hour: 6,
+          days: [ false,true,true,true,true,true,false ],
+        },
+      ],
+    });
+  });
+
   describe('GET /', function() {
     let url;
 
@@ -30,7 +47,7 @@ describe('HTTP API', function() {
       expect(buttons.eq(2).attr('disabled')).to.equal(undefined);
     });
 
-    it.skip('should show existing alarms with an additional empty new alarm', async function() {
+    it('should show existing alarms with an additional empty new alarm', async function() {
       const res = await request(app)
         .get(url)
         .expect(200);
@@ -39,8 +56,14 @@ describe('HTTP API', function() {
 
       const alarms = $('.alarm.container');
       expect(alarms).to.have.length(3);
-      expect(alarms.eq(0).children('.timepicker')).to.have.length(1);
-      expect(alarms.eq(0).children('.timepicker').attr('value')).to.equal('watsss');
+      expect(alarms.eq(0).find('.timepicker')).to.have.length(1);
+      expect(alarms.eq(0).find('.timepicker').attr('value')).to.equal('06:00');
+
+      expect(alarms.eq(1).find('.timepicker')).to.have.length(1);
+      expect(alarms.eq(1).find('.timepicker').attr('value')).to.equal('07:30');
+
+      expect(alarms.eq(2).find('.timepicker')).to.have.length(1);
+      expect(alarms.eq(2).find('.timepicker').attr('value')).to.equal(undefined);
     });
 
     context.skip('when there are no alarms configured', function() {
@@ -53,6 +76,52 @@ describe('HTTP API', function() {
 
         expect($('.alarm')).to.have.length(3);
       });
+    });
+  });
+
+  describe('POST /forms/alarm', function() {
+    let url;
+    let data;
+
+    beforeEach(async function() {
+      url = '/forms/alarm';
+      data = {
+        alarm_index: 0,
+        alarm_time: "08:32",
+        animation: "rainbow",
+        day_1: "on",
+        day_2: "on",
+        day_3: "on",
+        day_4: "on",
+      };
+    });
+
+    it('should return 302', async function() {
+      const res = await request(app)
+        .post(url)
+        .send(data)
+        .expect(302);
+    });
+
+    it('should save changes to the specified alarm', async function() {
+      const res = await request(app)
+        .post(url)
+        .send(data);
+
+      expect(store.getAlarms()).to.deep.equal([
+        {
+          animation: "sunrise",
+          days: [true,false,false,false,false,false,true],
+          hour: 7,
+          minute: 30,
+        },
+        {
+          animation: "rainbow",
+          days: [false,true,true,true,true,false,false],
+          hour: 8,
+          minute: 32,
+        },
+      ]);
     });
   });
 

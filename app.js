@@ -19,13 +19,38 @@ const store = new Store({
   height,
   alarms: [
     {
+      animation: "sunrise",
+      hour: 6,
+      minute: 30,
+      days: [ false,true,true,true,true,true,false ],
+    },
+    {
+      animation: "on",
+      hour: 6,
+      minute: 50,
+      days: [ false,true,true,true,true,true,false ],
+    },
+    {
+      animation: "rainbow",
+      hour: 7,
+      days: [ false,true,true,true,true,true,false ],
+    },
+    {
+      animation: "sunrise",
       hour: 7,
       minute: 30,
       days: [ true,false,false,false,false,false,true ],
     },
     {
-      hour: 6,
-      days: [ false,true,true,true,true,true,false ],
+      animation: "rainbow",
+      hour: 8,
+      days: [ true,false,false,false,false,false,true ],
+    },
+    {
+      animation: "off",
+      hour: 22,
+      minute: 30,
+      days: [ true,true,true,true,true,true,true ],
     },
   ],
 });
@@ -62,7 +87,7 @@ app.use(BodyParser.urlencoded({ extended: true }));
 
 app.get('/', function(req, res, next) {
   const current_animation = runner.getCurrentAnimation();
-  const animations = runner.getIdleAnimations().map((name) => {
+  const idle_animations = runner.getIdleAnimations().map((name) => {
     return {
       name,
       disabled: name === current_animation,
@@ -70,25 +95,38 @@ app.get('/', function(req, res, next) {
     };
   });
 
-  const alarms = store.getAlarms().map((alarm, index) => {
+  const all_animations = Object.keys(Animations);
+  function buildAnimations(current) {
+    return all_animations.map((name) => {
+      return {
+        name,
+        selected: name === current,
+      };
+    });
+  }
+
+  const alarms = store.getAlarms().map((alarm) => {
     const time = `${(alarm.hour || 0).toString().padStart(2, '0')}:${(alarm.minute || 0).toString().padStart(2,'0')}`;
+    const animation = alarm.animation || 'sunrise';
 
     return {
-      days: alarm.days,
       time,
+      animation,
+      animations: buildAnimations(animation),
+      days: alarm.days,
     };
   });
 
   // dummy blank alarm, to be able to add a new alarm
   alarms.push({
-    hour: 9,
-    minute: 0,
+    animation: 'sunrise',
+    animations: buildAnimations('sunrise'),
     days: [false,false,false,false,false,false,false],
   });
 
   const context = {
     alarms,
-    animations,
+    idle_animations,
   };
 
   return res.render('index.pug', context);
@@ -111,6 +149,7 @@ app.post('/forms/alarm', function(req, res, next) {
   }
   const alarm = current_state.alarms[alarm_index] || {};
 
+  alarm.animation = req.body.animation;
   alarm.hour = (match) ? Number(match[1]) : 0;
   alarm.minute = (match) ? Number(match[2]) : 0;
 
@@ -135,7 +174,7 @@ app.post('/forms/delete_alarm', function(req, res, next) {
   const alarm_index = req.body.alarm_index;
   const current_state = store.currentState();
 
-  current_state.alarms.splice(alarm_index);
+  current_state.alarms.splice(alarm_index,1);
 
   store.update(current_state);
 
@@ -171,3 +210,4 @@ app.put('/api/animation/current', function(req, res, next) {
 exports.app = app;
 exports.runner = runner;
 exports.display = display;
+exports.store = store;

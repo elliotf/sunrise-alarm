@@ -17,8 +17,12 @@ describe('Runner', function() {
       alarms: [
         {
           hour: 8,
-          warmup: 0,
-          cooldown: 0,
+          animation: 'sunrise',
+          days: [ true,false,false,false,false,false,true ],
+        },
+        {
+          hour: 9,
+          animation: 'off',
           days: [ true,false,false,false,false,false,true ],
         },
       ],

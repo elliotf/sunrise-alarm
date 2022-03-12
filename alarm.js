@@ -8,26 +8,18 @@ const Animation = require('./animation');
 class Alarm {
   constructor(attrs) {
     const {
-      hour,
-      minute=0,
-      warmup=20,
-      cooldown=30,
-      days=[],
       animation="sunrise",
       height,
-      start_date,
-      begin_ms=0,
-      peak_ms=0,
-      end_ms=0,
+      begin,
+      end,
     } = attrs;
 
     const AnimationKlass = Animation[animation];
 
-    this.hour = hour;
-    this.minute = minute;
-    this.warmup = warmup;
-    this.cooldown = cooldown;
-    this.days = days;
+    if (!AnimationKlass) {
+      throw new Error(`"${animation}" is not a valid animation`);
+    }
+
     this.animation = animation;
     if (!height) {
       throw new Error('need a height');
@@ -37,27 +29,19 @@ class Alarm {
     });
     this.height = height;
 
-    this.warmup_ms = this.warmup*util.MINUTE_IN_MS;
-    this.cooldown_ms = this.cooldown*util.MINUTE_IN_MS;
-    this.begin_ms = begin_ms;
-    this.peak_ms = peak_ms;
-    this.end_ms = end_ms;
+    this.begin = begin;
+    this.end = end;
+    this.window_ms = end - begin;
   }
 
   determineOffset(d) {
     const ms = d.valueOf();
-    const delta = ms - this.peak_ms;
-    if (delta === 0) {
-      return 0;
-    }
-    // FIXME: avoid divide by 0 due to no warmup/cooldown
-    const offset = (delta < 0)
-                 ? delta / (this.warmup_ms)
-                 : delta / (this.cooldown_ms);
-    return util.round(offset, 5);
+
+    const ms_through = ms - this.begin;
+    const pct_through = ms_through / this.window_ms;
+    return util.round(pct_through, 8);
   }
 
-  // untested
   async updateNow(d, led_string) {
     const offset = this.determineOffset(d);
 
@@ -73,6 +57,21 @@ class Alarm {
     return true;
   }
 
+  /*
+  run(from, until) {
+    const begin = from.valueOf();
+    const end = until.valueOf();
+
+    const attrs = {
+      ...this,
+      begin,
+      end,
+    };
+
+    return new Alarm(attrs);
+  }
+
+  /*
   startingOn(start_date) {
     const ldate = DateTime.fromJSDate(start_date);
 
@@ -84,19 +83,20 @@ class Alarm {
     const begin = peak.minus({ minute: this.warmup });
     const end = peak.plus({ minute: this.cooldown });
 
-    const begin_ms = begin.toMillis();
+    const begin = begin.toMillis();
     const peak_ms = peak.toMillis();
-    const end_ms = end.toMillis();
+    const end = end.toMillis();
 
     const attrs = {
       ...this,
-      begin_ms,
+      begin,
       peak_ms,
-      end_ms,
+      end,
     };
 
     return new Alarm(attrs);
   }
+  */
 }
 
 module.exports = Alarm;

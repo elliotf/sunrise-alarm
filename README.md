@@ -1,29 +1,19 @@
 # sunrise-alarm
-(WiP) A fake sunrise alarm that gradually brightens before an alarm goes off.
+An LED clock that can run animations on a schedule, including a fake sunrise
 
 Inspired by https://blog.sebasgo.net/2019/02/28/sunrise-alarm-clock-pi-dawn/ ( https://github.com/sebasgo/pi-dawn ) but reinventing the wheel because it's fun.
 
 # Development
-
-This is based on lives at https://github.com/sveltejs/template, originally created via
-
-```bash
-npx degit sveltejs/template sunrise-alarm
-```
 
 Getting up and going:
 ```
 git clone https://github.com/elliotf/sunrise-alarm.git
 cd sunrise-alarm
 npm install
+npx nodemon server.js
 ```
 
 Run tests in auto-watch mode with
 ```
 npm run test:watch
-```
-
-Build client-side assets with
-```
-npm run build
 ```
