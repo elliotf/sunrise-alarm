@@ -1,11 +1,11 @@
 const { expect, sinon } = require('./helper');
 const request = require('supertest');
 const cheerio = require('cheerio');
-const { app, runner, store } = require('../app');
+const { app, runner } = require('../app');
 
 describe('HTTP API', function() {
   beforeEach(async function() {
-    store.update({
+    runner.update({
       alarms: [
         {
           animation: "sunrise",
@@ -96,7 +96,7 @@ describe('HTTP API', function() {
         .post(url)
         .send(data);
 
-      expect(store.getAlarms()).to.deep.equal([
+      expect(runner.getAlarms()).to.deep.equal([
         {
           animation: "sunrise",
           days: [true,false,false,false,false,false,true],

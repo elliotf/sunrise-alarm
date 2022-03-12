@@ -1,6 +1,6 @@
 const chai = require('chai');
 const sinon = require('sinon');
-const { store } = require('../app');
+const { runner } = require('../app');
 
 chai.use(require('chai-exclude'));
 
@@ -9,7 +9,7 @@ exports.expect = chai.expect;
 
 beforeEach(async function() {
   exports.sinon.restore();
-  store.update({
+  runner.update({
     alarms: [],
   });
 });

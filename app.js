@@ -5,7 +5,6 @@ const fs = require('fs').promises;
 
 const LedString = require('./led_string');
 const Runner = require('./runner');
-const Store = require('./store');
 const util = require('./util');
 const log = require('./lib/log')(__filename);
 const Animations = require('./animation');
@@ -14,7 +13,7 @@ const num_pixels = 32*4; // 32pixels/M, 4M
 const width = 4;
 const height = Math.floor(num_pixels/width);
 
-const store = new Store({
+const runner = new Runner({
   fs,
   height,
   alarms: [
@@ -61,12 +60,6 @@ const display = new LedString({
   bottom_start: false,
 });
 
-const runner = new Runner({
-  width,
-  height,
-  store,
-});
-
 /*
 const button = new Gpio(4, 'in', 'rising', { debounceTimeout: 10 });
 button.watch(() => {
@@ -105,7 +98,7 @@ app.get('/', function(req, res, next) {
     });
   }
 
-  const alarms = store.getAlarms().map((alarm) => {
+  const alarms = runner.getAlarms().map((alarm) => {
     const time = `${(alarm.hour || 0).toString().padStart(2, '0')}:${(alarm.minute || 0).toString().padStart(2,'0')}`;
     const animation = alarm.animation || 'sunrise';
 
@@ -142,7 +135,7 @@ app.post('/forms/animation', function(req, res, next) {
 app.post('/forms/alarm', function(req, res, next) {
   // untested
   const alarm_index = req.body.alarm_index;
-  const current_state = store.currentState();
+  const current_state = runner.currentState();
   const match = req.body.alarm_time.match(/^(\d+):(\d+)$/);
   if (!match) {
     // 400 of some sort
@@ -160,9 +153,9 @@ app.post('/forms/alarm', function(req, res, next) {
 
   current_state.alarms[alarm_index] = alarm;
 
-  store.update(current_state);
+  runner.update(current_state);
 
-  store.saveToDisk()
+  runner.saveToDisk()
     .then(function() {
       return res.redirect('/')
     })
@@ -172,13 +165,13 @@ app.post('/forms/alarm', function(req, res, next) {
 app.post('/forms/delete_alarm', function(req, res, next) {
   // untested
   const alarm_index = req.body.alarm_index;
-  const current_state = store.currentState();
+  const current_state = runner.currentState();
 
   current_state.alarms.splice(alarm_index,1);
 
-  store.update(current_state);
+  runner.update(current_state);
 
-  store.saveToDisk()
+  runner.saveToDisk()
     .then(function() {
       return res.redirect('/')
     })
@@ -210,4 +203,3 @@ app.put('/api/animation/current', function(req, res, next) {
 exports.app = app;
 exports.runner = runner;
 exports.display = display;
-exports.store = store;
