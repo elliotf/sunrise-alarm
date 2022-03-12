@@ -65,18 +65,6 @@ describe('HTTP API', function() {
       expect(alarms.eq(2).find('.timepicker')).to.have.length(1);
       expect(alarms.eq(2).find('.timepicker').attr('value')).to.equal(undefined);
     });
-
-    context.skip('when there are no alarms configured', function() {
-      it('should show an empty new alarm', async function() {
-        const res = await request(app)
-          .get(url)
-          .expect(200);
-
-        const $ = cheerio.load(res.text);
-
-        expect($('.alarm')).to.have.length(3);
-      });
-    });
   });
 
   describe('POST /forms/alarm', function() {

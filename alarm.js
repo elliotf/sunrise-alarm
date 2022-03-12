@@ -56,47 +56,6 @@ class Alarm {
 
     return true;
   }
-
-  /*
-  run(from, until) {
-    const begin = from.valueOf();
-    const end = until.valueOf();
-
-    const attrs = {
-      ...this,
-      begin,
-      end,
-    };
-
-    return new Alarm(attrs);
-  }
-
-  /*
-  startingOn(start_date) {
-    const ldate = DateTime.fromJSDate(start_date);
-
-    const peak = ldate.set({
-      hour: this.hour,
-      minute: this.minute,
-    });
-
-    const begin = peak.minus({ minute: this.warmup });
-    const end = peak.plus({ minute: this.cooldown });
-
-    const begin = begin.toMillis();
-    const peak_ms = peak.toMillis();
-    const end = end.toMillis();
-
-    const attrs = {
-      ...this,
-      begin,
-      peak_ms,
-      end,
-    };
-
-    return new Alarm(attrs);
-  }
-  */
 }
 
 module.exports = Alarm;

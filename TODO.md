@@ -9,27 +9,12 @@
       * angle the contact edge for more support
         * surface farthest from the key switch is the bridge that is susceptible to sag
         * supports the angled surface that interfaces with the key retainer clip
-  * more flexible scheduling
-    * have start/stop for animation schedules
-      * or have a given event run until the next
-    * auto-on, auto-off, auto-rainbow, etc.
-    * begin/end
-      * which would make animations more consistent
-        * no more "warmup" for the sunrise
-        * everything would have a float for its animation cycle?
-          * 0 is start, 1 is end of cycle, 0.000005 is very close to start
-      * The sunrise would be separate from the "full on"
-      * The warmup would be separate from the "full on"
-      * more composable animations
-        * sunrise to rainbow is an option
+  * when alarm store is modified, current alarm should be re-evaluated
+    * at the very least to update current alarm's end to be soonest
+    * this would probably be easier if the runner and store were collapsed together
   * reduce CPU requirements, increase framerate
     * pre-generate or cache animations
     * C++ animation generation?
-  * away mode?
-    * random times?
-  * production-ize
-    * caddy?
-    * expose via oauth gateway?
   * assertions on animation/gradient config
     * avoid duplicate indices in schedule and gradients
 * eventually, maybe, but probably not
@@ -39,6 +24,11 @@
   * separate display from alarm
     * Tidier DI style
     * easier to stub out WS2801/phy under test?
+  * away mode?
+    * random times?
+  * production-ize
+    * caddy?
+    * expose via oauth gateway?
 * todone
   * web UI
     * adjust schedule
@@ -106,6 +96,19 @@
         * on
         * off
         * etc
+  * more flexible scheduling
+    * have start/stop for animation schedules
+      * or have a given event run until the next
+    * auto-on, auto-off, auto-rainbow, etc.
+    * begin/end
+      * which would make animations more consistent
+        * no more "warmup" for the sunrise
+        * everything would have a float for its animation cycle?
+          * 0 is start, 1 is end of cycle, 0.000005 is very close to start
+      * The sunrise would be separate from the "full on"
+      * The warmup would be separate from the "full on"
+      * more composable animations
+        * sunrise to rainbow is an option
 * todistract
   * once the alarm is going off, flash the lights?
     * that sounds kind of unpleasant, but maybe a pulse?
@@ -117,3 +120,12 @@
       * how to avoid self pollution?
   * web UI
     * YAGNI: adjust animations
+
+
+
+
+# New Layout
+* store
+  * holds alarm schedules
+* runner
+* instance

@@ -24,12 +24,12 @@ describe('Store', function() {
         {
           hour: 8,
           minute: 0,
-          days: [ true,false,false,false,false,false,true ],
+          days: [ false,true,true,true,true,true,false ],
         },
         {
           hour: 8,
           minute: 0,
-          days: [ false,true,true,true,true,true,false ],
+          days: [ true,false,false,false,false,false,true ],
         },
       ],
       fs: vol.promisesApi,
@@ -78,7 +78,7 @@ describe('Store', function() {
       const new_alarm = instance.getForDate(new Date('2021-10-01T06:00:00.000-05:00'));
       expect(new_alarm).to.be.an.instanceOf(Alarm);
       expect(new_alarm.begin).to.deep.equal(new Date("2021-10-01T06:00:00.000-05:00"));
-      expect(new_alarm.end).to.deep.equal(new Date("2021-10-01T08:00:00.000-05:00"));
+      expect(new_alarm.end).to.deep.equal(new Date("2021-10-01T07:59:59.999-05:00"));
     });
   });
 
@@ -199,6 +199,79 @@ describe('Store', function() {
     });
   });
 
+  describe('#_getNextAlarm', function() {
+    let day;
+    let alarm_i;
+
+    beforeEach(async function() {
+      day = 5;
+      alarm_i = 0;
+    });
+
+    it('should return the next alarm', async function() {
+      expect(instance._getNextAlarm(day, alarm_i)).to.deep.equal({
+        added_days: 0,
+        next_alarm: {
+          hour: 8,
+          minute: 0,
+          days: [ false,true,true,true,true,true,false ],
+        },
+      });
+    });
+
+    context('when provided the last alarm of the day', function() {
+      beforeEach(async function() {
+        alarm_i = 1;
+      });
+
+      it('should return the first alarm of the next day', async function() {
+        expect(instance._getNextAlarm(day, alarm_i)).to.deep.equal({
+          added_days: 1,
+          next_alarm: {
+            hour: 8,
+            minute: 0,
+            days: [ true,false,false,false,false,false,true ],
+          },
+        });
+      });
+
+      context('of the last day of the week (Saturday)', function() {
+        beforeEach(async function() {
+          day = 6;
+        });
+
+        it('should return the first alarm of the next day', async function() {
+          expect(instance._getNextAlarm(day, alarm_i)).to.deep.equal({
+            added_days: 1,
+            next_alarm: {
+              hour: 8,
+              minute: 0,
+              days: [ true,false,false,false,false,false,true ],
+            },
+          });
+        });
+      });
+
+      context('when there are no alarms for some days', function() {
+        beforeEach(async function() {
+          attrs.alarms.pop();
+          instance = new Store(attrs);
+        });
+
+        it('should look for the next day that has alarms', async function() {
+          expect(instance._getNextAlarm(day, alarm_i)).to.deep.equal({
+            added_days: 3,
+            next_alarm: {
+              hour: 6,
+              minute: 0,
+              days: [ false,true,true,true,true,true,false ],
+            },
+          });
+        });
+      });
+    });
+  });
+
   describe('#getForDate', function() {
     let fake_now;
 
@@ -209,42 +282,74 @@ describe('Store', function() {
     it('should return an event for that date', async function() {
       const result = instance.getForDate(fake_now);
       expect(result).to.be.an.instanceOf(Alarm);
-      expect(result.begin).to.deep.equal(new Date("2021-10-01T06:00:00.729-05:00"));
-      expect(result.end).to.deep.equal(new Date("2021-10-01T08:00:00.729-05:00"));
+      expect(result.begin).to.deep.equal(new Date("2021-10-01T06:00:00.000-05:00"));
+      expect(result.end).to.deep.equal(new Date("2021-10-01T07:59:59.999-05:00"));
     });
 
-    context.skip('when there are multiple events for that day of the week', function() {
-      it('should return the matching event', async function() {
+    context('when there are multiple events for that day of the week', function() {
+      it('should return the event that overlaps with the specified time', async function() {
+        const expected = [
+          {
+            // first alarm starts, runs until second alarm
+            input: new Date('2021-10-01T06:00:00.000-05:00'),
+            output: {
+              begin: new Date('2021-10-01T06:00:00.000-05:00'),
+              end: new Date('2021-10-01T07:59:59.999-05:00'),
+            },
+          },
+          {
+            // just before second alarm is still first alarm
+            input: new Date('2021-10-01T07:59:59.999-05:00'),
+            output: {
+              begin: new Date('2021-10-01T06:00:00.000-05:00'),
+              end: new Date('2021-10-01T07:59:59.999-05:00'),
+            },
+          },
+          {
+            // second alarm runs Friday until Sunday morning
+            input: new Date('2021-10-01T08:00:00.000-05:00'),
+            output: {
+              begin: new Date('2021-10-01T08:00:00.000-05:00'),
+              end: new Date('2021-10-02T07:59:59.999-05:00'),
+            },
+          },
+          {
+            // Saturday alarm runs until Sunday morning
+            input: new Date('2021-10-02T08:00:00.000-05:00'),
+            output: {
+              begin: new Date('2021-10-02T08:00:00.000-05:00'),
+              end: new Date('2021-10-03T07:59:59.999-05:00'),
+            },
+          },
+        ];
 
-        const six_am = new Date('2021-10-01T06:00:00.729-05:00');
-        const six_am_alarm = instance.getForDate(six_am);
-        expect(six_am_alarm).to.be.an.instanceOf(Alarm);
-        expect(six_am_alarm.hour).to.equal(6);
-        expect(six_am_alarm.minute).to.equal(0);
-        expect(six_am_starting_on.args).to.deep.equal([
-          [six_am],
-        ]);
+        const actual = [];
 
-        const eight_am = new Date('2021-10-01T08:00:00.729-05:00');
-        const eight_am_alarm = instance.getForDate(eight_am);
-        expect(eight_am_alarm).to.be.an.instanceOf(Alarm);
-        expect(eight_am_alarm.hour).to.equal(8);
-        expect(eight_am_alarm.minute).to.equal(0);
-        expect(eight_am_starting_on.args).to.deep.equal([
-          [eight_am],
-        ]);
+        expected.forEach(({input}) => {
+          const alarm = instance.getForDate(input) || { begin: null, end: null };
+          actual.push({
+            input,
+            output: {
+              begin: alarm.begin,
+              end: alarm.end,
+            },
+          });
+        });
+
+        expect(actual).to.deep.equal(expected);
       });
     });
 
     context('when no alarm matches', function() {
       beforeEach(async function() {
-        fake_now = new Date('2021-10-01T01:30:00.000-05:00');
+        attrs.alarms = [];
+
+        instance = new Store(attrs);
       });
 
-      // FIXME: return a known "no alarm" value instead of null
+      // FIXME: return a known "no alarm" value or an "off" alarm instead of null
       it('should return null', async function() {
-        const seven_am = instance.getForDate(new Date('2021-10-01T07:00:00.729-05:00'));
-        expect(seven_am).to.be.equal(null);
+        expect(instance.getForDate(new Date('2021-10-01T07:00:00.729-05:00'))).to.equal(null);
       });
     });
   });
@@ -260,12 +365,12 @@ describe('Store', function() {
         {
           hour: 8,
           minute: 0,
-          days: [ true,false,false,false,false,false,true ],
+          days: [ false,true,true,true,true,true,false ],
         },
         {
           hour: 8,
           minute: 0,
-          days: [ false,true,true,true,true,true,false ],
+          days: [ true,false,false,false,false,false,true ],
         },
       ]);
     });

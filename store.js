@@ -92,27 +92,53 @@ class Store {
     return this.currentState().alarms;
   }
 
+  _getNextAlarm(day, alarm_i) {
+    let alarms = this._days[day];
+    let next_i = alarm_i + 1;
+    let added_days = 0;
+    let next_alarm = alarms[next_i];
+    while (!next_alarm && added_days < 7) {
+      // alarm_i was the last alarm on that day, so let's go to the next
+      ++added_days;
+      const next_day = (day+added_days) % 7; // wrap day of week around if necessary
+      next_i = 0;
+      next_alarm = this._days[next_day][next_i];
+    }
+
+    return {
+      next_alarm,
+      added_days,
+    };
+  }
+
   getForDate(date) {
     const day = date.getDay();
     date.setSeconds(0);
+    date.setMilliseconds(0);
+
+    let candidate = null;
 
     const alarms = this._days[day];
     for (let i = 0; i < alarms.length; ++i) {
       const alarm = alarms[i];
 
-      if (date.getHours() === alarm.hour && date.getMinutes() === alarm.minute) {
+      if (date.getHours() >= alarm.hour && date.getMinutes() >= alarm.minute) {
         const begin = DateTime.fromJSDate(date).set({ hour: alarm.hour, minute: alarm.minute }).toJSDate();
-        const next_alarm = alarms[i+1];
-        const end = (next_alarm)
-                  ? DateTime.fromJSDate(date).set({ hour: next_alarm.hour, minute: next_alarm.minute }).toJSDate()
-                  : DateTime.fromJSDate(date).startOf('day').plus({ days: 1 }).toJSDate()
-        return new Alarm({
+        const {next_alarm, added_days} = this._getNextAlarm(day, i);
+        const end = DateTime.fromJSDate(date).set({ hour: next_alarm.hour, minute: next_alarm.minute }).plus({ milliseconds: -1, days: added_days }).toJSDate()
+        candidate = {
           ...alarm,
           begin,
           end,
-          height: this.height,
-        });
+        };
       }
+    }
+
+    if (candidate) {
+      return new Alarm({
+        ...candidate,
+        height: this.height,
+      });
     }
 
     return null;
