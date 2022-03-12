@@ -13,7 +13,7 @@ class Runner {
   constructor({ store }) {
     this.store = store;
 
-    this.setIdleAnimation('off');
+    this.setAnimation('off');
 
     this.current_alarm = this.idle_alarm;
   }
@@ -22,11 +22,11 @@ class Runner {
     return this.current_alarm.animation;
   }
 
-  getIdleAnimations() {
+  getAnimations() {
     return [...idle_animations];
   }
 
-  setIdleAnimation(animation) {
+  setAnimation(animation) {
     const animation_i = idle_animations.indexOf(animation);
     if (animation_i < 0) {
       throw new Error(`${animation} is an ivalid idle animation`);
@@ -43,7 +43,7 @@ class Runner {
     const next_index = (current_index + 1) % idle_animations.length;
     const next_animation = idle_animations[next_index];
 
-    this.setIdleAnimation(next_animation);
+    this.setAnimation(next_animation);
   }
 
   async updateNow(d, display) {

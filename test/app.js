@@ -162,13 +162,13 @@ describe('HTTP API', function() {
     });
 
     it('should toggle the idle animation', async function() {
-      sinon.spy(runner, 'setIdleAnimation');
+      sinon.spy(runner, 'setAnimation');
 
       const res = await request(app)
         .put(url)
         .send(data);
 
-      expect(runner.setIdleAnimation.args).to.deep.equal([
+      expect(runner.setAnimation.args).to.deep.equal([
         ['rainbow'],
       ]);
     });

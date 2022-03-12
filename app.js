@@ -87,7 +87,7 @@ app.use(BodyParser.urlencoded({ extended: true }));
 
 app.get('/', function(req, res, next) {
   const current_animation = runner.getCurrentAnimation();
-  const idle_animations = runner.getIdleAnimations().map((name) => {
+  const idle_animations = runner.getAnimations().map((name) => {
     return {
       name,
       disabled: name === current_animation,
@@ -134,7 +134,7 @@ app.get('/', function(req, res, next) {
 
 app.post('/forms/animation', function(req, res, next) {
   // untested
-  runner.setIdleAnimation(req.body.animation);
+  runner.setAnimation(req.body.animation);
 
   return res.redirect('/')
 });
@@ -202,7 +202,7 @@ app.put('/api/animation/current', function(req, res, next) {
     });
   }
 
-  runner.setIdleAnimation(animation);
+  runner.setAnimation(animation);
 
   res.send({});
 });

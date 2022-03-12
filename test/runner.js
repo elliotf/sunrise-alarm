@@ -111,7 +111,7 @@ describe('Runner', function() {
 
   describe('#getAnimations', function() {
     it('should return a list of valid idle animations', async function() {
-      expect(inst.getIdleAnimations()).to.deep.equal([
+      expect(inst.getAnimations()).to.deep.equal([
         'off',
         'on',
         'rainbow',
@@ -119,20 +119,20 @@ describe('Runner', function() {
     });
   });
 
-  describe('#setIdleAnimation', function() {
+  describe('#setAnimation', function() {
     it('should set the `current_alarm` to the new mode', async function() {
       const starting = inst.current_alarm;
 
       expect(starting.animation).to.equal('off');
       expect(inst.idle_alarm).to.equal(starting);
 
-      inst.setIdleAnimation('on');
+      inst.setAnimation('on');
 
       const set_on = inst.current_alarm;
       expect(inst.idle_alarm).to.equal(set_on);
       expect(set_on.animation).to.equal('on');
 
-      inst.setIdleAnimation('rainbow');
+      inst.setAnimation('rainbow');
 
       const set_rainbow = inst.current_alarm;
       expect(inst.idle_alarm).to.equal(set_rainbow);
@@ -142,7 +142,7 @@ describe('Runner', function() {
     context('when an invalid mode is specified', function() {
       it('should throw an error', async function() {
         expect(function() {
-          inst.setIdleAnimation('invalid');
+          inst.setAnimation('invalid');
         }).to.throw(Error, /invalid.*animation/i);
       });
     });
