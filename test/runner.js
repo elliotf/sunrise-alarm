@@ -126,7 +126,7 @@ describe('Runner', function() {
 
   describe('#getCurrentAnimation', function() {
     it('should return the animation of the `current_alarm`', async function() {
-      expect(instance.getCurrentAnimation()).to.equal('off');
+      expect(instance.getCurrentAnimation()).to.equal('sunrise');
     });
   });
 
@@ -144,7 +144,7 @@ describe('Runner', function() {
     it('should set the `current_alarm` to the new mode', async function() {
       const starting = instance.current_alarm;
 
-      expect(starting.animation).to.equal('off');
+      expect(starting.animation).to.equal('sunrise');
 
       instance.setAnimation('on');
 
@@ -168,6 +168,9 @@ describe('Runner', function() {
 
   describe('#toggleIdleAnimation', function() {
     it('should cycle through idle animations', async function() {
+      expect(instance.current_alarm.animation).to.equal('sunrise');
+
+      instance.toggleIdleAnimation();
       expect(instance.current_alarm.animation).to.equal('off');
 
       instance.toggleIdleAnimation();
@@ -231,6 +234,18 @@ describe('Runner', function() {
       expect(new_alarm).to.be.an.instanceOf(Alarm);
       expect(new_alarm.begin).to.deep.equal(new Date("2021-10-01T06:00:00.000-05:00"));
       expect(new_alarm.end).to.deep.equal(new Date("2021-10-01T07:59:59.999-05:00"));
+    });
+
+    it('should reset current alarm based on new state', async function() {
+      instance.update(attrs);
+
+      expect(instance.getNearestAlarm(fake_now)).excluding(['_animator']).to.deep.equal({
+        animation: 'sunrise',
+        begin: new Date('2021-01-07T06:00:00.000-06:00'),
+        end: new Date('2021-01-07T07:59:59.999-06:00'),
+        height: 6,
+        window_ms: 7199999,
+      });
     });
   });
 

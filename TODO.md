@@ -9,9 +9,6 @@
       * angle the contact edge for more support
         * surface farthest from the key switch is the bridge that is susceptible to sag
         * supports the angled surface that interfaces with the key retainer clip
-  * when alarm store is modified, current alarm should be re-evaluated
-    * at the very least to update current alarm's end to be soonest
-    * this would probably be easier if the runner and store were collapsed together
   * reduce CPU requirements, increase framerate
     * pre-generate or cache animations
     * C++ animation generation?
@@ -109,6 +106,9 @@
       * The warmup would be separate from the "full on"
       * more composable animations
         * sunrise to rainbow is an option
+  * when alarm store is modified, current alarm should be re-evaluated
+    * at the very least to update current alarm's end to be soonest
+    * this would probably be easier if the runner and store were collapsed together
 * todistract
   * once the alarm is going off, flash the lights?
     * that sounds kind of unpleasant, but maybe a pulse?

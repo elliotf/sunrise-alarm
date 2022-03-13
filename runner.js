@@ -20,8 +20,6 @@ class Runner {
     this.update({
       alarms,
     });
-
-    this.setAnimation('off');
   }
 
   getCurrentAnimation() {
@@ -116,6 +114,8 @@ class Runner {
         return a.time - b.time;
       });
     });
+
+    this.current_alarm = this.getForDate(new Date());
   }
 
   currentState() {

@@ -27,6 +27,8 @@ describe('HTTP API', function() {
 
     beforeEach(async function() {
       url = '/';
+
+      runner.setAnimation("off");
     });
 
     it('should display the current idle animation', async function() {
