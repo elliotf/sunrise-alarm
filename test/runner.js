@@ -42,7 +42,7 @@ describe('Runner', function() {
       alarms: attrs.alarms,
     };
 
-    fake_now = new Date('2021-01-01T08:00:00.000-06:00');
+    fake_now = new Date('2021-01-01T06:00:00.000-06:00');
 
     fake_display = new LedString({
       width: 1,
@@ -82,20 +82,23 @@ describe('Runner', function() {
         ]);
       });
 
-      context('when the time is past the lifetime of the current alarm (Alarm#updateNow returns false)', function() {
+      context('when the time is after the lifetime of the current alarm (Alarm#updateNow returns false)', function() {
         beforeEach(async function() {
           fake_now = new Date('2021-01-02T10:00:00.000-06:00');
         });
 
-        it('should replace the alarm with the noop alarm', async function() {
+        it('should replace the alarm with next alarm', async function() {
+          const old_alarm = instance.current_alarm;
+
           await instance.updateNow(fake_now, fake_display);
 
-          expect(instance.current_alarm.animation).to.equal('off');
+          expect(instance.current_alarm.animation).to.equal('sunrise');
+          expect(instance.current_alarm).not.to.eq(old_alarm);
         });
       });
     });
 
-    context('when there is no current alarm', function() {
+    context.skip('when there is no current alarm', function() {
       it('should delegate to #getForDate', async function() {
         sinon.spy(instance, 'getForDate');
 
@@ -142,18 +145,15 @@ describe('Runner', function() {
       const starting = instance.current_alarm;
 
       expect(starting.animation).to.equal('off');
-      expect(instance.idle_alarm).to.equal(starting);
 
       instance.setAnimation('on');
 
       const set_on = instance.current_alarm;
-      expect(instance.idle_alarm).to.equal(set_on);
       expect(set_on.animation).to.equal('on');
 
       instance.setAnimation('rainbow');
 
       const set_rainbow = instance.current_alarm;
-      expect(instance.idle_alarm).to.equal(set_rainbow);
       expect(set_rainbow.animation).to.equal('rainbow');
     });
 
@@ -543,6 +543,50 @@ describe('Runner', function() {
 
       it('should return an empty array', async function() {
         expect(instance.getAlarms()).to.deep.equal([]);
+      });
+    });
+  });
+
+  describe('#getNearestAlarm', function() {
+    let now;
+
+    beforeEach(async function() {
+      attrs.alarms = [
+        {
+          hour: 6,
+          days: [ false,false,false,false,false,true,false ],
+        },
+      ];
+      instance = new Runner(attrs);
+    });
+
+    context('when there is an alarm active during the time provided', function() {
+      it('should return that alarm', async function() {
+        expect(instance.getNearestAlarm(fake_now)).excluding(['_animator']).to.deep.equal({
+          animation: 'sunrise',
+          begin: new Date('2021-01-01T06:00:00.000-06:00'),
+          end: new Date('2021-01-08T05:59:59.999-06:00'),
+          height: 6,
+          window_ms: 604799999,
+        });
+      });
+    });
+
+    context('when there is no alarm active during the time provided', function() {
+      beforeEach(async function() {
+        fake_now = new Date(fake_now.valueOf() + 86400 * 1000);
+      });
+
+      it('should return the nearest alarm in the future', async function() {
+        const result = instance.getNearestAlarm(fake_now);
+        expect(result).to.be.an.instanceOf(Alarm);
+        expect(result).excluding(['_animator']).to.deep.equal({
+          animation: 'sunrise',
+          begin: new Date('2021-01-08T06:00:00.000-06:00'),
+          end: new Date('2021-01-15T05:59:59.999-06:00'),
+          height: 6,
+          window_ms: 604799999,
+        });
       });
     });
   });

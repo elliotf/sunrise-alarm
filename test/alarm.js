@@ -84,7 +84,14 @@ describe('Alarm', function() {
       expect(await instance.updateNow(new Date('2021-01-01T00:10:00-06:00'), fake_display)).to.equal(true);
     });
 
-    context('when the alarm has passed its period', function() {
+    context("when the date provided is before the alarm's begin", function() {
+      it('should resolve false', async function() {
+        expect(await instance.updateNow(new Date('2020-01-01T00:10:00.001-06:00'), fake_display)).to.equal(false);
+        expect(await instance.updateNow(new Date('2020-01-01T05:00:00-06:00'), fake_display)).to.equal(false);
+      });
+    });
+
+    context("when the date provided is after the alarm's end", function() {
       it('should resolve false', async function() {
         expect(await instance.updateNow(new Date('2021-01-01T00:10:00.001-06:00'), fake_display)).to.equal(false);
         expect(await instance.updateNow(new Date('2021-01-01T05:00:00-06:00'), fake_display)).to.equal(false);

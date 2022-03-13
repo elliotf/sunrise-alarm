@@ -17,13 +17,11 @@ class Runner {
     this.height = height;
     this._fs = fs;
 
-    this.setAnimation('off');
-
-    this.current_alarm = this.idle_alarm;
-
     this.update({
       alarms,
     });
+
+    this.setAnimation('off');
   }
 
   getCurrentAnimation() {
@@ -40,9 +38,18 @@ class Runner {
       throw new Error(`${animation} is an ivalid idle animation`);
     }
 
-    this.current_alarm = this.idle_alarm = new Alarm({
+    const alarm = this.getNearestAlarm(new Date());
+    const begin = new Date();
+    let end = new Date(begin.valueOf() + 60*60*1000);
+    if (alarm) {
+      end = new Date(Math.min(end.valueOf(), alarm.begin.valueOf()));
+    }
+
+    this.current_alarm = new Alarm({
       animation,
       height: this.height,
+      begin,
+      end,
     });
   }
 
@@ -55,17 +62,9 @@ class Runner {
   }
 
   async updateNow(d, display) {
-    if (this.current_alarm === this.idle_alarm) {
-      const new_alarm = this.getForDate(d);
-
-      if (new_alarm) {
-        this.current_alarm = new_alarm;
-      }
-    }
-
     const still_valid = await this.current_alarm.updateNow(d, display); // take in LED string?
     if (!still_valid) {
-      this.current_alarm = this.idle_alarm;
+      this.current_alarm = this.getForDate(d);
     }
   }
 
@@ -164,6 +163,40 @@ class Runner {
       next_alarm,
       added_days,
     };
+  }
+
+  getNearestAlarm(date) {
+    const today = date.getDay();
+    let candidate = null;
+
+    for (let days_in_future = 0; days_in_future < 7; ++days_in_future) {
+      const day = (today + days_in_future) % 7;
+      const alarms = this._days[day];
+
+      for (let i = 0; i < alarms.length; ++i) {
+        const alarm = alarms[i];
+
+        if (date.getHours() >= alarm.hour && date.getMinutes() >= alarm.minute) {
+          const begin = DateTime.fromJSDate(date).set({ hour: alarm.hour, minute: alarm.minute }).plus({ days: days_in_future }).toJSDate();
+          const {next_alarm, added_days} = this._getNextAlarm(day, i);
+          const end = DateTime.fromJSDate(begin).set({ hour: next_alarm.hour, minute: next_alarm.minute }).plus({ milliseconds: -1, days: added_days }).toJSDate()
+          candidate = {
+            ...alarm,
+            begin,
+            end,
+          };
+        }
+      }
+    }
+
+    if (candidate) {
+      return new Alarm({
+        ...candidate,
+        height: this.height,
+      });
+    }
+
+    return null;
   }
 
   getForDate(date) {

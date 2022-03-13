@@ -50,11 +50,7 @@ class Alarm {
 
     await led_string.fill(colors);
 
-    if (offset > 1) {
-      return false;
-    }
-
-    return true;
+    return (d >= this.begin && d <= this.end);
   }
 }
 
