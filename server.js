@@ -20,9 +20,11 @@ app.listen(listen_port, function(err) {
   log.info(`Listening on port ${listen_port}`);
 });
 
-function start() {
+async function start() {
   // this should probably be done more intelligent to avoid a race between LED updates and the interval
   // it's not a problem so far, though
+
+  await runner.loadFromDisk();
 
   if (true) {
     // normal operation
